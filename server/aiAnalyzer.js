@@ -7,17 +7,22 @@ const axios = require("axios");
 LINKSHIELD AI ANALYZER
 =========================================================
 
-This module:
-1. Uses rule-based URL information.
-2. Generates context-aware recommendations.
-3. Optionally uses an AI API if OPENAI_API_KEY exists.
-4. Never gives the same recommendation for every URL.
+Purpose:
+1. Give the AI the URL and objective security signals.
+2. Ask for a structured security judgment.
+3. Use AI as a SECOND opinion, not as proof.
+4. Never let AI override confirmed threat intelligence.
+5. If AI is unavailable, return a safe local fallback.
+
+Important:
+- "Unknown" does NOT mean malicious.
+- A normal login/account/payment URL is not automatically suspicious.
+- The AI must not invent reputation or threat-intelligence data.
 =========================================================
 */
 
-
 // =======================================================
-// CONTEXT-AWARE RECOMMENDATION
+// LOCAL FALLBACK RECOMMENDATION
 // =======================================================
 
 function generateRecommendation(
@@ -27,162 +32,51 @@ function generateRecommendation(
     reasons = [],
     threatIntel = {}
 ) {
-    const text = `${url} ${reasons.join(" ")}`.toLowerCase();
-
-
-    // ---------------------------------------------------
-    // KNOWN MALICIOUS URL
-    // ---------------------------------------------------
-
     if (threatIntel.knownThreat) {
         return (
             "Do not open or interact with this URL. " +
-            "It has been identified as a known malicious threat."
+            "Threat intelligence has identified it as a known malicious URL."
         );
     }
-
-
-    // ---------------------------------------------------
-    // HIGH RISK
-    // ---------------------------------------------------
-
-    if (level === "HIGH" || riskScore > 60) {
-        return (
-            "Avoid opening this website. " +
-            "The URL contains multiple high-risk indicators."
-        );
-    }
-
-
-    // ---------------------------------------------------
-    // LOGIN / SIGN IN
-    // ---------------------------------------------------
 
     if (
-        text.includes("login") ||
-        text.includes("sign in") ||
-        text.includes("signin") ||
-        text.includes("log in")
+        level === "CRITICAL" ||
+        riskScore >= 80
     ) {
         return (
-            "Check that the domain is the official website " +
-            "before entering your login credentials."
+            "Avoid interacting with this URL until the source " +
+            "and domain have been independently verified."
         );
     }
-
-
-    // ---------------------------------------------------
-    // VERIFICATION
-    // ---------------------------------------------------
 
     if (
-        text.includes("verify") ||
-        text.includes("verification") ||
-        text.includes("confirm account") ||
-        text.includes("account verification")
+        level === "HIGH" ||
+        riskScore > 45
     ) {
         return (
-            "If this is an account verification request, " +
-            "confirm that it came from the official website " +
-            "before continuing."
+            "Proceed carefully. Review the domain and suspicious " +
+            "indicators before entering sensitive information."
         );
     }
-
-
-    // ---------------------------------------------------
-    // PASSWORD RESET
-    // ---------------------------------------------------
 
     if (
-        text.includes("password") ||
-        text.includes("reset password") ||
-        text.includes("forgot password")
+        level === "MEDIUM" ||
+        riskScore > 20
     ) {
         return (
-            "For password changes, use the official website " +
-            "or app directly rather than relying on the link."
+            "No confirmed malicious threat was found, but some " +
+            "indicators deserve caution before sensitive interactions."
         );
     }
-
-
-    // ---------------------------------------------------
-    // PAYMENT / CHECKOUT
-    // ---------------------------------------------------
-
-    if (
-        text.includes("payment") ||
-        text.includes("checkout") ||
-        text.includes("billing") ||
-        text.includes("credit card") ||
-        text.includes("card")
-    ) {
-        return (
-            "Check the domain and HTTPS connection carefully " +
-            "before entering payment or financial information."
-        );
-    }
-
-
-    // ---------------------------------------------------
-    // CRYPTO / WALLET
-    // ---------------------------------------------------
-
-    if (
-        text.includes("wallet") ||
-        text.includes("crypto") ||
-        text.includes("connect wallet") ||
-        text.includes("metamask")
-    ) {
-        return (
-            "Do not connect a crypto wallet unless you " +
-            "recognize and trust the website and its domain."
-        );
-    }
-
-
-    // ---------------------------------------------------
-    // DOWNLOAD
-    // ---------------------------------------------------
-
-    if (
-        text.includes("download") ||
-        text.includes(".exe") ||
-        text.includes(".zip") ||
-        text.includes(".dmg")
-    ) {
-        return (
-            "Verify the source before downloading files " +
-            "from this website."
-        );
-    }
-
-
-    // ---------------------------------------------------
-    // MEDIUM RISK
-    // ---------------------------------------------------
-
-    if (level === "MEDIUM" || riskScore > 30) {
-        return (
-            "Proceed with caution. Review the domain and URL " +
-            "indicators before interacting with the website."
-        );
-    }
-
-
-    // ---------------------------------------------------
-    // LOW RISK
-    // ---------------------------------------------------
 
     return (
-        "No major suspicious indicators were detected. " +
-        "You can browse normally, but avoid sharing sensitive " +
-        "information unless you trust the website."
+        "No major malicious indicators were detected by the " +
+        "available checks. Continue normal security practices."
     );
 }
 
-
 // =======================================================
-// LOCAL AI-STYLE EXPLANATION
+// LOCAL FALLBACK EXPLANATION
 // =======================================================
 
 function generateLocalExplanation(
@@ -190,66 +84,33 @@ function generateLocalExplanation(
     ruleResult,
     threatIntel
 ) {
-    const reasons = ruleResult.reasons || [];
-
     if (threatIntel.knownThreat) {
         return (
-            "Threat intelligence identified this URL as potentially " +
-            "malicious. LinkShield recommends avoiding interaction " +
-            "with the website."
+            "Threat intelligence identified this URL as a known " +
+            "malicious threat."
         );
     }
 
-    if (ruleResult.level === "HIGH") {
-        if (reasons.length > 0) {
-            return (
-                "The URL has a high risk score because LinkShield " +
-                "detected suspicious indicators including: " +
-                reasons.join(", ") +
-                "."
-            );
-        }
+    const reasons =
+        ruleResult.reasons || [];
 
+    if (reasons.length === 0) {
         return (
-            "The URL received a high risk score based on the " +
-            "security analysis performed by LinkShield."
-        );
-    }
-
-    if (ruleResult.level === "MEDIUM") {
-        if (reasons.length > 0) {
-            return (
-                "The URL contains some indicators that require " +
-                "caution, including: " +
-                reasons.join(", ") +
-                "."
-            );
-        }
-
-        return (
-            "The URL has some potentially suspicious characteristics, " +
-            "so LinkShield recommends caution before interacting with it."
-        );
-    }
-
-    if (reasons.length > 0) {
-        return (
-            "The URL has a low overall risk score, although LinkShield " +
-            "detected the following minor indicators: " +
-            reasons.join(", ") +
-            "."
+            "The available checks did not identify major " +
+            "suspicious indicators in this URL."
         );
     }
 
     return (
-        "LinkShield did not detect major suspicious indicators " +
-        "in the URL using the available security checks."
+        "The URL contains the following signals that were " +
+        "considered during the security assessment: " +
+        reasons.join(", ") +
+        ". These signals are indicators, not proof of maliciousness."
     );
 }
 
-
 // =======================================================
-// OPTIONAL OPENAI ANALYSIS
+// OPENAI ANALYSIS
 // =======================================================
 
 async function analyzeWithOpenAI(
@@ -257,105 +118,164 @@ async function analyzeWithOpenAI(
     ruleResult,
     threatIntel
 ) {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey =
+        process.env.OPENAI_API_KEY;
 
-    // No API key -> use local analysis
     if (!apiKey) {
         return null;
     }
 
     try {
         const prompt = `
-You are a cybersecurity URL analysis assistant.
+You are the secondary AI security analyst for LinkShield.
 
-Analyze this URL:
+Your job is to assess a URL carefully and reduce false positives
+without ignoring real threats.
 
 URL:
 ${url}
 
-Rule-based risk score:
-${ruleResult.riskScore}
+Local technical analysis:
+${JSON.stringify(ruleResult, null, 2)}
 
-Rule-based risk level:
-${ruleResult.level}
+Threat intelligence:
+${JSON.stringify(threatIntel, null, 2)}
 
-Detected reasons:
-${JSON.stringify(ruleResult.reasons)}
+Rules for your judgment:
 
-Known threat:
-${threatIntel.knownThreat}
+1. A known malicious threat from threat intelligence is strong evidence.
+2. Never invent reputation, malware reports, domain age, ownership,
+   or external facts that were not provided.
+3. "Not found in threat intelligence" does NOT prove a URL is safe.
+4. Unknown does NOT mean malicious.
+5. Do NOT treat these alone as malicious:
+   - HTTPS
+   - login
+   - account
+   - secure
+   - password
+   - verification
+   - query parameters
+   - a long URL
+   - normal subdomains
+6. A legitimate website may contain login, account, payment,
+   learning, coding, shopping, or verification pages.
+7. Look for combinations of strong suspicious signals:
+   credential deception, embedded credentials, IP-based hosting,
+   suspicious executable downloads, deceptive URL patterns,
+   urgent reward/verification patterns, or other clearly suspicious
+   combinations present in the supplied evidence.
+8. If the URL looks like a normal legitimate website and there is
+   no strong malicious evidence, classify it LOW rather than HIGH.
+9. Do not claim certainty. Security classification is probabilistic.
+10. Your risk score should represent the evidence available in the
+    input, not your general assumptions about the internet.
 
-Threat sources:
-${JSON.stringify(threatIntel.sources || [])}
-
-Provide a short cybersecurity explanation.
-
-Important:
-- Do not claim that a website is safe with certainty.
-- Do not invent threat intelligence.
-- Do not tell the user to enter sensitive information.
-- Give a recommendation appropriate to the apparent purpose of the URL.
-- If the URL appears related to login, mention credentials.
-- If it appears related to verification, mention verification.
-- If it appears related to payment, mention payment information.
-- If it appears related to crypto/wallets, mention wallet safety.
-- If it appears related to downloading, mention file safety.
-- If it is a normal website, give a normal browsing recommendation.
-
-Return ONLY valid JSON:
+Return ONLY valid JSON with exactly this structure:
 
 {
-    "explanation": "...",
-    "recommendation": "..."
+  "classification": "LOW",
+  "riskScore": 10,
+  "confidence": 90,
+  "isLegitimate": true,
+  "explanation": "Short explanation of the evidence.",
+  "recommendation": "Practical recommendation for the user.",
+  "indicators": []
 }
+
+Allowed classification values:
+LOW, MEDIUM, HIGH, CRITICAL, UNKNOWN
+
+Scoring guidance:
+LOW: 0-20
+MEDIUM: 21-45
+HIGH: 46-75
+CRITICAL: 76-100
+
+A normal legitimate website with no strong malicious evidence
+should generally be LOW, even if it has ordinary login/account
+paths or query parameters.
+
+Do not return markdown.
 `;
 
-        const response = await axios.post(
-            "https://api.openai.com/v1/chat/completions",
-            {
-                model:
-                    process.env.OPENAI_MODEL ||
-                    "gpt-4o-mini",
+        const response =
+            await axios.post(
+                "https://api.openai.com/v1/chat/completions",
+                {
+                    model:
+                        process.env.OPENAI_MODEL ||
+                        "gpt-4o-mini",
 
-                messages: [
-                    {
-                        role: "system",
-                        content:
-                            "You are a cybersecurity URL analysis assistant."
-                    },
-                    {
-                        role: "user",
-                        content: prompt
+                    messages: [
+                        {
+                            role: "system",
+                            content:
+                                "You are a careful cybersecurity URL analyst. " +
+                                "Avoid false positives and never invent evidence."
+                        },
+                        {
+                            role: "user",
+                            content: prompt
+                        }
+                    ],
+
+                    temperature: 0.1,
+
+                    response_format: {
+                        type: "json_object"
                     }
-                ],
+                },
+                {
+                    timeout: 20000,
 
-                temperature: 0.2,
+                    headers: {
+                        "Content-Type":
+                            "application/json",
 
-                response_format: {
-                    type: "json_object"
+                        Authorization:
+                            `Bearer ${apiKey}`
+                    }
                 }
-            },
-            {
-                timeout: 20000,
-
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization:
-                        `Bearer ${apiKey}`
-                }
-            }
-        );
+            );
 
         const content =
-            response.data?.choices?.[0]?.message?.content;
+            response.data
+                ?.choices?.[0]
+                ?.message?.content;
 
         if (!content) {
             return null;
         }
 
-        const parsed = JSON.parse(content);
+        const parsed =
+            JSON.parse(content);
+
+        const allowedLevels = [
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            "CRITICAL",
+            "UNKNOWN"
+        ];
 
         if (
+            !allowedLevels.includes(
+                parsed.classification
+            )
+        ) {
+            return null;
+        }
+
+        const score =
+            Number(parsed.riskScore);
+
+        const confidence =
+            Number(parsed.confidence);
+
+        if (
+            !Number.isFinite(score) ||
+            !Number.isFinite(confidence) ||
             typeof parsed.explanation !== "string" ||
             typeof parsed.recommendation !== "string"
         ) {
@@ -363,8 +283,47 @@ Return ONLY valid JSON:
         }
 
         return {
-            explanation: parsed.explanation,
-            recommendation: parsed.recommendation
+            classification:
+                parsed.classification,
+
+            riskScore:
+                Math.min(
+                    Math.max(
+                        Math.round(score),
+                        0
+                    ),
+                    100
+                ),
+
+            confidence:
+                Math.min(
+                    Math.max(
+                        Math.round(confidence),
+                        0
+                    ),
+                    100
+                ),
+
+            isLegitimate:
+                parsed.isLegitimate === true,
+
+            explanation:
+                parsed.explanation,
+
+            recommendation:
+                parsed.recommendation,
+
+            indicators:
+                Array.isArray(
+                    parsed.indicators
+                )
+                    ? parsed.indicators
+                        .filter(
+                            item =>
+                                typeof item === "string"
+                        )
+                        .slice(0, 8)
+                    : []
         };
 
     } catch (error) {
@@ -377,7 +336,6 @@ Return ONLY valid JSON:
     }
 }
 
-
 // =======================================================
 // MAIN ANALYZER
 // =======================================================
@@ -388,32 +346,6 @@ async function analyzeWithAI(
     threatIntel
 ) {
     try {
-
-        // -------------------------------------------------
-        // LOCAL ANALYSIS
-        // -------------------------------------------------
-
-        const localExplanation =
-            generateLocalExplanation(
-                url,
-                ruleResult,
-                threatIntel
-            );
-
-        const localRecommendation =
-            generateRecommendation(
-                url,
-                ruleResult.riskScore,
-                ruleResult.level,
-                ruleResult.reasons,
-                threatIntel
-            );
-
-
-        // -------------------------------------------------
-        // TRY AI ANALYSIS
-        // -------------------------------------------------
-
         const aiResult =
             await analyzeWithOpenAI(
                 url,
@@ -421,53 +353,29 @@ async function analyzeWithAI(
                 threatIntel
             );
 
-
-        // -------------------------------------------------
-        // AI AVAILABLE
-        // -------------------------------------------------
-
         if (aiResult) {
-
-            return {
-                riskScore: ruleResult.riskScore,
-
-                explanation:
-                    aiResult.explanation,
-
-                recommendation:
-                    aiResult.recommendation
-            };
+            return aiResult;
         }
 
-
-        // -------------------------------------------------
-        // AI UNAVAILABLE
-        // LOCAL FALLBACK
-        // -------------------------------------------------
+        // ----------------------------------------------
+        // AI unavailable: deterministic local fallback
+        // ----------------------------------------------
 
         return {
-            riskScore: ruleResult.riskScore,
+            classification:
+                ruleResult.level || "UNKNOWN",
 
-            explanation:
-                localExplanation,
+            riskScore:
+                ruleResult.riskScore,
 
-            recommendation:
-                localRecommendation
-        };
+            confidence:
+                threatIntel.knownThreat
+                    ? 99
+                    : 60,
 
-    } catch (error) {
-
-        console.error(
-            "AI Analyzer Error:",
-            error.message
-        );
-
-        // -------------------------------------------------
-        // FINAL FALLBACK
-        // -------------------------------------------------
-
-        return {
-            riskScore: ruleResult.riskScore,
+            isLegitimate:
+                !threatIntel.knownThreat &&
+                ruleResult.riskScore <= 20,
 
             explanation:
                 generateLocalExplanation(
@@ -483,15 +391,50 @@ async function analyzeWithAI(
                     ruleResult.level,
                     ruleResult.reasons,
                     threatIntel
-                )
+                ),
+
+            indicators:
+                ruleResult.reasons || []
+        };
+
+    } catch (error) {
+        console.error(
+            "AI Analyzer Error:",
+            error.message
+        );
+
+        return {
+            classification:
+                ruleResult.level || "UNKNOWN",
+
+            riskScore:
+                ruleResult.riskScore,
+
+            confidence: 50,
+
+            isLegitimate: false,
+
+            explanation:
+                generateLocalExplanation(
+                    url,
+                    ruleResult,
+                    threatIntel
+                ),
+
+            recommendation:
+                generateRecommendation(
+                    url,
+                    ruleResult.riskScore,
+                    ruleResult.level,
+                    ruleResult.reasons,
+                    threatIntel
+                ),
+
+            indicators:
+                ruleResult.reasons || []
         };
     }
 }
-
-
-// =======================================================
-// EXPORT
-// =======================================================
 
 module.exports = {
     analyzeWithAI
