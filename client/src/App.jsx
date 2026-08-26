@@ -1244,7 +1244,6 @@ function App() {
     return (
       <div className="auth-loading">
         <div className="auth-loading-icon">
-          🛡️
         </div>
 
         <h2>
