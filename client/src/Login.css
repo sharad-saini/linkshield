@@ -1,126 +1,631 @@
-.login-page {
-    min-height: 100vh;
-    width: 100%;
-    background: #06101f;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 30px;
+/* =========================================================
+   LINKSHIELD — LOGIN.CSS
+   FINAL RESPONSIVE VERSION
+========================================================= */
+
+*,
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
-.login-card {
+.login-page {
     width: 100%;
-    max-width: 430px;
-    background: rgba(15, 29, 49, 0.95);
-    border: 1px solid rgba(100, 160, 255, 0.2);
-    border-radius: 24px;
-    padding: 45px 35px;
-    text-align: center;
-    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.45);
+    min-height: 100vh;
+    min-height: 100dvh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+
+    padding:
+        28px 18px;
+
+    overflow: hidden;
+
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    background:
+        radial-gradient(circle at 50% 18%,
+            rgba(38, 140, 255, 0.15),
+            transparent 35%),
+        radial-gradient(circle at 15% 80%,
+            rgba(60, 80, 200, 0.07),
+            transparent 30%),
+        #040d1a;
+
+    color: #ffffff;
 }
+
+/* =========================================================
+   BACKGROUND GRID
+========================================================= */
+
+.login-page::before {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    pointer-events: none;
+
+    background-image:
+        linear-gradient(rgba(70, 130, 190, 0.035) 1px,
+            transparent 1px),
+        linear-gradient(90deg,
+            rgba(70, 130, 190, 0.035) 1px,
+            transparent 1px);
+
+    background-size: 45px 45px;
+
+    mask-image:
+        linear-gradient(to bottom,
+            black,
+            transparent 90%);
+
+    -webkit-mask-image:
+        linear-gradient(to bottom,
+            black,
+            transparent 90%);
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.login-card {
+    width:
+        min(430px, 100%);
+
+    position: relative;
+    z-index: 1;
+
+    padding:
+        36px 34px 30px;
+
+    border:
+        1px solid rgba(63, 120, 175, 0.42);
+
+    border-radius: 23px;
+
+    background:
+        linear-gradient(145deg,
+            rgba(14, 31, 51, 0.98),
+            rgba(7, 21, 36, 0.98));
+
+    box-shadow:
+        0 30px 90px rgba(0, 0, 0, 0.48),
+        0 0 45px rgba(30, 115, 220, 0.07);
+
+    text-align: center;
+
+    overflow: hidden;
+}
+
+.login-card::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 12%;
+    right: 12%;
+
+    height: 1px;
+
+    background:
+        linear-gradient(90deg,
+            transparent,
+            rgba(75, 165, 255, 0.8),
+            transparent);
+}
+
+/* =========================================================
+   REAL LOGO
+========================================================= */
 
 .login-logo {
-    width: 75px;
-    height: 75px;
-    margin: 0 auto 20px;
+    width: 88px;
+    height: 88px;
+
+    margin:
+        0 auto 22px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    background: linear-gradient(135deg, #1677ff, #6c5ce7);
-    border-radius: 22px;
+    border-radius: 25px;
 
-    font-size: 38px;
+    background:
+        linear-gradient(135deg,
+            #1677ff,
+            #5960e8);
 
-    box-shadow: 0 10px 30px rgba(40, 110, 255, 0.35);
+    box-shadow:
+        0 15px 45px rgba(38, 120, 255, 0.28);
+
+    overflow: hidden;
 }
+
+.login-logo img {
+    width: 62px;
+    height: 62px;
+
+    display: block;
+
+    object-fit: contain;
+}
+
+/*
+   If your JSX puts the actual logo directly inside
+   .login-logo, this keeps it correctly sized.
+*/
+
+.login-logo>svg {
+    width: 62px;
+    height: 62px;
+}
+
+/* =========================================================
+   TITLE
+========================================================= */
 
 .login-card h1 {
-    margin: 0;
+    max-width: 340px;
+
+    margin:
+        0 auto 10px;
+
     color: #ffffff;
-    font-size: 32px;
-    font-weight: 700;
+
+    font-size:
+        clamp(34px, 8vw, 42px);
+
+    font-weight: 800;
+
+    line-height: 1.04;
+
+    letter-spacing: -1.7px;
 }
 
-.login-card p {
-    margin: 12px 0 30px;
-    color: #aebbd0;
+/* =========================================================
+   SUBTITLE
+========================================================= */
+
+.login-subtitle {
+    max-width: 330px;
+
+    margin:
+        0 auto 25px;
+
+    color: #a2b4c9;
+
     font-size: 16px;
+
+    line-height: 1.5;
 }
 
-.google-login,
-.guest-login {
+/* =========================================================
+   GOOGLE
+========================================================= */
+
+.google-login {
     width: 100%;
-    height: 52px;
-
-    border: none;
-    border-radius: 12px;
-
-    font-size: 16px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition: all 0.2s ease;
+    min-height: 53px;
 
     display: flex;
     align-items: center;
     justify-content: center;
+
     gap: 10px;
-}
 
-.google-login {
+    padding:
+        0 16px;
+
+    border: none;
+
+    border-radius: 13px;
+
     background: #ffffff;
-    color: #202124;
-}
 
-.google-login:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.15);
-}
+    color: #20272e;
 
-.google-login span {
-    font-size: 20px;
+    font-size: 15px;
     font-weight: 700;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-.guest-login {
-    background: #14243a;
-    color: #ffffff;
-    border: 1px solid #2b4567;
+.google-login:hover:not(:disabled) {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.22);
 }
 
-.guest-login:hover {
-    background: #1c3150;
-    transform: translateY(-2px);
+.google-login:disabled {
+    opacity: 0.6;
 }
+
+/* =========================================================
+   DIVIDER
+========================================================= */
 
 .login-divider {
+    width: 100%;
+
+    margin:
+        21px 0;
+
     display: flex;
     align-items: center;
-    gap: 15px;
 
-    margin: 22px 0;
+    gap: 14px;
 
-    color: #71809a;
-    font-size: 12px;
-    font-weight: 600;
+    color: #71859c;
+
+    font-size: 13px;
 }
 
 .login-divider::before,
 .login-divider::after {
     content: "";
-    flex: 1;
+
     height: 1px;
-    background: #263952;
+
+    flex: 1;
+
+    background: #294158;
 }
 
-.login-card small {
-    display: block;
-    margin-top: 20px;
+/* =========================================================
+   GUEST
+========================================================= */
 
-    color: #71809a;
+.guest-login {
+    width: 100%;
+    min-height: 53px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+
+    padding:
+        0 16px;
+
+    border:
+        1px solid #31536f;
+
+    border-radius: 13px;
+
+    background:
+        rgba(18, 40, 63, 0.72);
+
+    color: #f0f6fc;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.guest-login:hover:not(:disabled) {
+    transform: translateY(-1px);
+
+    background:
+        rgba(25, 55, 85, 0.9);
+
+    border-color: #3f8dd0;
+}
+
+.guest-login:disabled {
+    opacity: 0.6;
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.login-error {
+    width: 100%;
+
+    margin-top: 15px;
+
+    padding:
+        11px 13px;
+
+    border:
+        1px solid rgba(255, 75, 85, 0.3);
+
+    border-radius: 9px;
+
+    background:
+        rgba(140, 25, 35, 0.13);
+
+    color: #ff9ba1;
+
     font-size: 12px;
-    line-height: 1.5; }
+
+    line-height: 1.5;
+
+    text-align: left;
+}
+
+/* =========================================================
+   INFO
+========================================================= */
+
+.login-info {
+    display: block;
+
+    max-width: 310px;
+
+    margin:
+        19px auto 0;
+
+    color: #8499ae;
+
+    font-size: 13px;
+
+    line-height: 1.55;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .login-page {
+        padding:
+            22px 15px;
+    }
+
+    .login-card {
+        padding:
+            32px 27px 27px;
+    }
+
+    .login-logo {
+        width: 84px;
+        height: 84px;
+
+        margin-bottom: 20px;
+    }
+
+    .login-logo img {
+        width: 58px;
+        height: 58px;
+    }
+
+    .login-card h1 {
+        font-size: 38px;
+    }
+
+    .login-subtitle {
+        font-size: 15px;
+    }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 520px) {
+
+    .login-page {
+        min-height: 100dvh;
+
+        padding:
+            14px 11px;
+    }
+
+    .login-card {
+        width: 100%;
+
+        padding:
+            29px 21px 25px;
+
+        border-radius: 21px;
+    }
+
+    .login-logo {
+        width: 78px;
+        height: 78px;
+
+        margin-bottom: 19px;
+
+        border-radius: 23px;
+    }
+
+    .login-logo img {
+        width: 54px;
+        height: 54px;
+    }
+
+    .login-card h1 {
+        max-width: 300px;
+
+        font-size: 35px;
+
+        line-height: 1.04;
+
+        letter-spacing: -1.5px;
+    }
+
+    .login-subtitle {
+        max-width: 320px;
+
+        margin-bottom: 23px;
+
+        font-size: 15px;
+    }
+
+    .google-login,
+    .guest-login {
+        min-height: 51px;
+
+        border-radius: 12px;
+
+        font-size: 14px;
+    }
+
+    .login-divider {
+        margin:
+            18px 0;
+
+        font-size: 12px;
+    }
+
+    .login-info {
+        max-width: 290px;
+
+        margin-top: 17px;
+
+        font-size: 12px;
+    }
+}
+
+/* =========================================================
+   SMALL PHONES
+========================================================= */
+
+@media (max-width: 390px) {
+
+    .login-page {
+        padding:
+            9px;
+    }
+
+    .login-card {
+        padding:
+            24px 16px 21px;
+
+        border-radius: 19px;
+    }
+
+    .login-logo {
+        width: 70px;
+        height: 70px;
+
+        margin-bottom: 16px;
+
+        border-radius: 21px;
+    }
+
+    .login-logo img {
+        width: 48px;
+        height: 48px;
+    }
+
+    .login-card h1 {
+        font-size: 31px;
+
+        letter-spacing: -1.2px;
+    }
+
+    .login-subtitle {
+        margin-bottom: 20px;
+
+        font-size: 14px;
+    }
+
+    .google-login,
+    .guest-login {
+        min-height: 49px;
+
+        font-size: 13px;
+    }
+
+    .login-divider {
+        margin:
+            16px 0;
+    }
+
+    .login-info {
+        margin-top: 15px;
+
+        font-size: 11.5px;
+    }
+}
+
+/* =========================================================
+   VERY SMALL
+========================================================= */
+
+@media (max-width: 350px) {
+
+    .login-card {
+        padding:
+            21px 13px 18px;
+    }
+
+    .login-logo {
+        width: 64px;
+        height: 64px;
+
+        font-size: 30px;
+    }
+
+    .login-logo img {
+        width: 44px;
+        height: 44px;
+    }
+
+    .login-card h1 {
+        font-size: 28px;
+    }
+
+    .login-subtitle {
+        font-size: 13px;
+    }
+
+    .google-login,
+    .guest-login {
+        min-height: 47px;
+
+        font-size: 12.5px;
+    }
+}
+
+/* =========================================================
+   TOUCH
+========================================================= */
+
+@media (hover: none) {
+
+    .google-login:hover,
+    .guest-login:hover {
+        transform: none;
+        box-shadow: none;
+    }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .login-page *,
+    .login-page *::before,
+    .login-page *::after {
+        transition: none !important;
+        animation: none !important;
+    }
+}
