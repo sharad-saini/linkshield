@@ -1,16 +1,8 @@
 /* =========================================================
-   LINKSHIELD — APP.CSS
-   FINAL CONSOLIDATED VERSION
-   Desktop + Tablet + Mobile
+   GLOBAL
 ========================================================= */
 
-/* =========================================================
-   RESET
-========================================================= */
-
-*,
-*::before,
-*::after {
+* {
   box-sizing: border-box;
 }
 
@@ -30,7 +22,7 @@ body {
     "Segoe UI",
     sans-serif;
 
-  background: #040d1a;
+  background: #06101f;
   color: #ffffff;
 
   overflow-x: hidden;
@@ -61,10 +53,6 @@ p {
   margin-top: 0;
 }
 
-img {
-  max-width: 100%;
-}
-
 /* =========================================================
    APP
 ========================================================= */
@@ -76,13 +64,10 @@ img {
   overflow-x: hidden;
 
   background:
-    radial-gradient(circle at 50% -10%,
-      rgba(38, 140, 255, 0.17),
-      transparent 38%),
-    radial-gradient(circle at 10% 45%,
-      rgba(20, 95, 180, 0.07),
-      transparent 30%),
-    #040d1a;
+    radial-gradient(circle at 50% 15%,
+      rgba(30, 105, 190, 0.12),
+      transparent 35%),
+    #06101f;
 
   color: #ffffff;
 }
@@ -93,7 +78,7 @@ img {
 
 .auth-loading {
   min-height: 100vh;
-  min-height: 100dvh;
+  width: 100%;
 
   display: flex;
   flex-direction: column;
@@ -104,40 +89,39 @@ img {
 
   text-align: center;
 
-  background: #040d1a;
+  background: #06101f;
   color: #ffffff;
 }
 
 .auth-loading-icon {
-  width: 72px;
-  height: 72px;
+  width: 75px;
+  height: 75px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border-radius: 20px;
-
   background:
     linear-gradient(135deg,
       #1677ff,
-      #625ee8);
+      #6c5ce7);
 
-  box-shadow:
-    0 15px 40px rgba(38, 120, 255, 0.25);
+  border-radius: 22px;
 
-  font-size: 36px;
+  font-size: 38px;
 
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .auth-loading h2 {
-  margin: 0 0 7px;
+  margin: 0 0 8px;
+
   color: #ffffff;
 }
 
 .auth-loading p {
   margin: 0;
+
   color: #91a3b8;
 }
 
@@ -146,11 +130,10 @@ img {
 ========================================================= */
 
 .navbar {
-  min-height: 68px;
+  min-height: 72px;
   width: 100%;
 
-  padding:
-    0 clamp(18px, 6vw, 80px);
+  padding: 0 42px;
 
   display: flex;
   align-items: center;
@@ -158,75 +141,48 @@ img {
 
   gap: 20px;
 
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  border-bottom:
+    1px solid rgba(90, 140, 190, 0.15);
 
   background:
-    rgba(4, 13, 26, 0.88);
+    rgba(6, 16, 31, 0.94);
 
-  border-bottom:
-    1px solid rgba(67, 139, 210, 0.16);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 
-  box-shadow:
-    0 8px 30px rgba(0, 0, 0, 0.16);
+  position: sticky;
+  top: 0;
 
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  z-index: 100;
 }
 
-/*
-   IMPORTANT:
-   Do NOT use .logo::before.
-   Your actual logo belongs in JSX.
-*/
-
 .logo {
-  min-width: 0;
-
-  display: flex;
-  align-items: center;
-
-  gap: 9px;
-
   color: #ffffff;
 
-  font-size: 21px;
+  font-size: 22px;
   font-weight: 800;
-
-  letter-spacing: -0.4px;
 
   white-space: nowrap;
 }
 
-.logo img {
-  width: 28px;
-  height: 28px;
-
-  flex-shrink: 0;
-
-  display: block;
-
-  object-fit: contain;
-}
-
 .nav-right {
-  min-width: 0;
-
   display: flex;
   align-items: center;
   justify-content: flex-end;
 
-  gap: 9px;
+  gap: 10px;
+
+  min-width: 0;
 }
 
 .security-label {
   color: #7890aa;
+
   font-size: 13px;
 }
 
 .user-info {
-  max-width: 180px;
+  max-width: 190px;
 
   overflow: hidden;
   text-overflow: ellipsis;
@@ -239,41 +195,33 @@ img {
 
 .history-button,
 .logout-button {
-  min-height: 38px;
-
   border:
-    1px solid rgba(67, 126, 177, 0.35);
+    1px solid #29445f;
+
+  background: #101f31;
+  color: #dce8f5;
+
+  padding: 9px 14px;
 
   border-radius: 9px;
-
-  padding:
-    8px 13px;
-
-  background:
-    rgba(15, 31, 50, 0.8);
-
-  color: #dce8f5;
 
   font-size: 13px;
 
   transition:
-    transform 0.2s ease,
     background 0.2s ease,
     border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    transform 0.2s ease;
 }
 
 .history-button:hover,
 .logout-button:hover {
-  transform: translateY(-1px);
+  background: #182d45;
+  border-color: #3d668d;
+}
 
-  background:
-    rgba(26, 54, 84, 0.9);
-
-  border-color: #268cff;
-
-  box-shadow:
-    0 0 18px rgba(38, 140, 255, 0.12);
+.history-button:active,
+.logout-button:active {
+  transform: scale(0.98);
 }
 
 .logout-button {
@@ -286,146 +234,67 @@ img {
 
 .hero {
   width:
-    min(1050px, calc(100% - 30px));
+    min(1050px,
+      calc(100% - 30px));
 
   margin: 0 auto;
 
   padding:
-    86px 20px 100px;
-
-  position: relative;
+    90px 20px 80px;
 
   text-align: center;
 }
 
-/* cyber grid */
-
-.hero::before {
-  content: "";
-
-  position: absolute;
-
-  top: 0;
-  left: 50%;
-
-  width: 100vw;
-  height: 620px;
-
-  transform: translateX(-50%);
-
-  pointer-events: none;
-
-  background-image:
-    linear-gradient(rgba(70, 130, 190, 0.035) 1px,
-      transparent 1px),
-    linear-gradient(90deg,
-      rgba(70, 130, 190, 0.035) 1px,
-      transparent 1px);
-
-  background-size: 45px 45px;
-
-  mask-image:
-    linear-gradient(to bottom,
-      black,
-      transparent);
-
-  -webkit-mask-image:
-    linear-gradient(to bottom,
-      black,
-      transparent);
-}
-
-.hero>* {
-  position: relative;
-  z-index: 1;
-}
-
-/* =========================================================
-   BADGE
-========================================================= */
-
 .badge {
   display: inline-block;
 
-  padding:
-    9px 17px;
+  padding: 7px 13px;
 
   border:
-    1px solid rgba(38, 140, 255, 0.35);
+    1px solid rgba(52, 137, 230, 0.35);
 
   border-radius: 30px;
 
+  color: #54a9ff;
+
   background:
-    linear-gradient(135deg,
-      rgba(38, 140, 255, 0.12),
-      rgba(80, 95, 220, 0.06));
+    rgba(27, 106, 184, 0.08);
 
-  color: #65b4ff;
-
-  box-shadow:
-    0 0 25px rgba(38, 140, 255, 0.08),
-    inset 0 0 15px rgba(38, 140, 255, 0.03);
-
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
 
-  letter-spacing: 1.8px;
+  letter-spacing: 1.4px;
 }
 
-/* =========================================================
-   HERO TITLE
-========================================================= */
-
 .hero h1 {
-  max-width: 900px;
-
   margin:
-    25px auto 20px;
+    22px 0 18px;
 
   color: #ffffff;
 
   font-size:
-    clamp(44px, 7vw, 78px);
+    clamp(42px, 7vw, 76px);
 
-  font-weight: 850;
+  line-height: 1.03;
 
-  line-height: 0.98;
-
-  letter-spacing: -4px;
-
-  text-shadow:
-    0 10px 45px rgba(0, 0, 0, 0.25);
+  letter-spacing: -3px;
 }
 
 .hero h1 span {
-  background:
-    linear-gradient(90deg,
-      #3d91ff,
-      #65c0ff,
-      #4c72ff);
-
-  -webkit-background-clip: text;
-  background-clip: text;
-
-  -webkit-text-fill-color: transparent;
-
-  text-shadow: none;
+  color: #55aaff;
 }
 
 .hero-description {
-  max-width: 690px;
+  max-width: 650px;
 
   margin:
     0 auto 38px;
 
-  color: #8fa7c0;
+  color: #91a3b8;
 
-  font-size: 16px;
+  font-size: 17px;
 
-  line-height: 1.8;
+  line-height: 1.7;
 }
 
 /* =========================================================
@@ -434,65 +303,25 @@ img {
 
 .scanner {
   width:
-    min(850px, 100%);
+    min(800px, 100%);
 
   margin: 0 auto;
 
-  padding: 9px;
-
-  position: relative;
+  padding: 8px;
 
   display: flex;
 
-  gap: 9px;
+  gap: 8px;
 
-  background:
-    linear-gradient(145deg,
-      rgba(18, 39, 63, 0.96),
-      rgba(7, 22, 38, 0.96));
+  background: #0c1b2c;
 
   border:
-    1px solid rgba(64, 126, 180, 0.4);
+    1px solid #263f5a;
 
-  border-radius: 18px;
+  border-radius: 15px;
 
   box-shadow:
-    0 25px 80px rgba(0, 0, 0, 0.42),
-    0 0 45px rgba(28, 119, 220, 0.08);
-}
-
-.scanner::before {
-  content: "";
-
-  position: absolute;
-
-  top: 0;
-  left: 0;
-  right: 0;
-
-  height: 1px;
-
-  background:
-    linear-gradient(90deg,
-      transparent,
-      rgba(73, 164, 255, 0.8),
-      transparent);
-}
-
-.scanner::after {
-  content: "●  LINK ANALYSIS READY";
-
-  position: absolute;
-
-  left: 20px;
-  bottom: -28px;
-
-  color: #4f779d;
-
-  font-size: 9px;
-  font-weight: 700;
-
-  letter-spacing: 1.3px;
+    0 20px 60px rgba(0, 0, 0, 0.25);
 }
 
 .scanner input {
@@ -500,62 +329,53 @@ img {
 
   min-width: 0;
 
-  height: 58px;
-
-  padding:
-    0 20px;
+  height: 52px;
 
   border: none;
   outline: none;
 
+  padding:
+    15px 17px;
+
   background: transparent;
 
-  color: #f5f9ff;
+  color: #ffffff;
 
   font-size: 15px;
 }
 
 .scanner input::placeholder {
-  color: #637d98;
+  color: #60758d;
 }
 
 .scanner button {
-  min-width: 165px;
-  height: 58px;
-
-  flex-shrink: 0;
-
-  padding:
-    0 20px;
+  min-width: 145px;
 
   border: none;
 
-  border-radius: 12px;
+  border-radius: 10px;
 
   background:
     linear-gradient(135deg,
       #1677ff,
-      #315eea);
+      #256de2);
 
   color: #ffffff;
 
-  font-size: 14px;
   font-weight: 700;
 
-  box-shadow:
-    0 8px 25px rgba(22, 119, 255, 0.22);
+  padding: 0 20px;
 
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    opacity 0.2s ease;
+    0.2s ease;
 }
 
 .scanner button:hover:not(:disabled) {
-  transform: translateY(-2px);
+  transform:
+    translateY(-1px);
 
   box-shadow:
-    0 12px 35px rgba(22, 119, 255, 0.38);
+    0 8px 25px rgba(22, 119, 255, 0.3);
 }
 
 .scanner button:disabled {
@@ -568,29 +388,27 @@ img {
 
 .result {
   width:
-    min(850px, calc(100% - 30px));
+    min(800px, 100%);
 
   margin:
-    62px auto 0;
+    45px auto 0;
 
-  padding: 35px;
+  padding: 32px;
 
   background:
-    linear-gradient(145deg,
-      rgba(13, 31, 50, 0.98),
-      rgba(7, 20, 34, 0.98));
+    rgba(12, 27, 44, 0.9);
 
   border:
-    1px solid rgba(63, 112, 153, 0.35);
+    1px solid #263f5a;
 
-  border-radius: 20px;
-
-  box-shadow:
-    0 30px 90px rgba(0, 0, 0, 0.4);
+  border-radius: 18px;
 
   text-align: left;
 
   color: #ffffff;
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.25);
 }
 
 .result h2,
@@ -606,38 +424,31 @@ img {
 }
 
 .score {
-  width: 118px;
-  height: 118px;
+  width: 105px;
+  height: 105px;
 
   margin:
     0 auto 15px;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
   border:
-    7px solid currentColor;
+    6px solid currentColor;
 
   border-radius: 50%;
-
-  background:
-    radial-gradient(circle,
-      rgba(30, 90, 150, 0.14),
-      transparent 68%);
-
-  box-shadow:
-    0 0 35px currentColor;
 
   font-size: 25px;
   font-weight: 800;
 }
 
 .result h3 {
+  text-align: center;
+
   margin:
     10px 0 20px;
-
-  text-align: center;
 }
 
 .low-risk {
@@ -657,22 +468,16 @@ img {
 ========================================================= */
 
 .risk-meter {
-  height: 12px;
-
-  margin:
-    15px 0 25px;
+  height: 10px;
 
   overflow: hidden;
 
-  background: #091827;
-
-  border:
-    1px solid #1d3851;
+  background: #162a40;
 
   border-radius: 20px;
 
-  box-shadow:
-    inset 0 2px 5px rgba(0, 0, 0, 0.3);
+  margin:
+    15px 0 25px;
 }
 
 .risk-meter-fill {
@@ -682,9 +487,6 @@ img {
 
   transition:
     width 0.5s ease;
-
-  box-shadow:
-    0 0 15px currentColor;
 }
 
 .low-meter {
@@ -708,9 +510,9 @@ img {
 .result-url {
   display: block;
 
-  margin-top: 10px;
-
   color: #66819c;
+
+  margin-top: 10px;
 
   word-break: break-all;
 }
@@ -724,39 +526,33 @@ img {
 
   padding: 18px;
 
-  background:
-    linear-gradient(135deg,
-      rgba(150, 25, 35, 0.16),
-      rgba(90, 15, 25, 0.08));
-
   border:
-    1px solid rgba(255, 76, 88, 0.35);
+    1px solid rgba(255, 75, 85, 0.35);
 
   border-radius: 12px;
 
-  box-shadow:
-    0 0 30px rgba(255, 60, 70, 0.06);
+  background:
+    rgba(130, 20, 30, 0.13);
 }
 
 .high-risk-warning-title {
-  margin-bottom: 10px;
-
   color: #ff6b73;
 
   font-weight: 800;
+
+  margin-bottom: 10px;
 }
 
 .high-risk-warning p {
-  margin:
-    8px 0;
-
   color: #d6aeb1;
 
   line-height: 1.6;
+
+  margin: 8px 0;
 }
 
 /* =========================================================
-   THREAT / REASONS / AI / PREVIEW
+   THREAT / AI / PREVIEW
 ========================================================= */
 
 .threat-intel,
@@ -810,9 +606,9 @@ img {
 }
 
 .threat-danger p {
-  margin-bottom: 0;
-
   color: #c9a4a7;
+
+  margin-bottom: 0;
 }
 
 .reasons ul {
@@ -820,9 +616,9 @@ img {
 }
 
 .reasons li {
-  margin-bottom: 10px;
-
   color: #bac8d7;
+
+  margin-bottom: 10px;
 
   line-height: 1.5;
 }
@@ -838,22 +634,16 @@ img {
 .ai-box {
   padding: 18px;
 
-  background:
-    linear-gradient(145deg,
-      rgba(18, 43, 69, 0.8),
-      rgba(9, 27, 46, 0.8));
-
   border:
-    1px solid rgba(66, 135, 194, 0.35);
+    1px solid #2b4763;
 
   border-radius: 12px;
+
+  background: #0e2033;
 
   color: #bdccdb;
 
   line-height: 1.7;
-
-  box-shadow:
-    inset 0 0 25px rgba(40, 120, 200, 0.03);
 }
 
 .ai-box p {
@@ -861,42 +651,39 @@ img {
 }
 
 .recommendation {
-  display: inline-block;
-
-  margin-top: 8px;
-
-  color: #67b7ff;
-
-  font-weight: 700;
+  color: #80bfff;
 }
 
 /* =========================================================
-   PREVIEW SECTION
+   PREVIEW
 ========================================================= */
 
 .preview-title-row {
   display: flex;
+
+  justify-content:
+    space-between;
+
   align-items: center;
-  justify-content: space-between;
 
   gap: 15px;
 }
 
 .protected-badge {
-  padding:
-    6px 10px;
-
-  border:
-    1px solid rgba(42, 185, 125, 0.25);
+  padding: 6px 10px;
 
   border-radius: 20px;
 
   background:
     rgba(42, 185, 125, 0.12);
 
+  border:
+    1px solid rgba(42, 185, 125, 0.25);
+
   color: #67d9a4;
 
   font-size: 11px;
+
   font-weight: 700;
 
   white-space: nowrap;
@@ -909,10 +696,10 @@ img {
 }
 
 .privacy-note {
+  padding: 13px;
+
   margin:
     15px 0;
-
-  padding: 13px;
 
   border-radius: 9px;
 
@@ -926,12 +713,12 @@ img {
 }
 
 .preview-button {
-  padding:
-    13px 18px;
-
   border: none;
 
   border-radius: 10px;
+
+  padding:
+    13px 18px;
 
   background:
     linear-gradient(135deg,
@@ -943,41 +730,52 @@ img {
   font-weight: 700;
 }
 
+.preview-button:disabled {
+  opacity: 0.6;
+}
+
 /* =========================================================
    HISTORY
 ========================================================= */
 
 .history-section {
   width:
-    min(1000px, calc(100% - 30px));
+    min(1000px, 100%);
 
   margin:
-    30px auto;
+    30px auto 0;
 
   padding: 30px;
 
-  position: relative;
-  z-index: 20;
-
-  isolation: isolate;
-
   background:
     linear-gradient(145deg,
-      rgba(13, 31, 50, 0.98),
-      rgba(7, 20, 34, 0.98));
+      rgba(14, 30, 48, 0.98),
+      rgba(9, 23, 38, 0.98));
 
   border:
-    1px solid rgba(63, 112, 153, 0.4);
+    1px solid #29435d;
 
   border-radius: 18px;
 
   box-shadow:
-    0 30px 90px rgba(0, 0, 0, 0.4);
+    0 25px 70px rgba(0, 0, 0, 0.3);
+
+  position: relative;
+
+  z-index: 20;
+
+  text-align: left;
 
   color: #ffffff;
 
-  text-align: left;
+  isolation: isolate;
 }
+
+/*
+   IMPORTANT:
+   Explicit heading colors prevent browser/theme/global
+   styles from turning History headings black.
+*/
 
 .history-section h1,
 .history-section h2,
@@ -998,8 +796,11 @@ img {
 
 .history-header {
   display: flex;
+
   align-items: center;
-  justify-content: space-between;
+
+  justify-content:
+    space-between;
 
   gap: 20px;
 
@@ -1013,6 +814,8 @@ img {
 .history-header h2 {
   margin:
     0 0 7px;
+
+  color: #ffffff !important;
 
   font-size: 25px;
 
@@ -1049,6 +852,7 @@ img {
 
 .close-history:hover {
   background: #1c344d;
+
   color: #ffffff;
 }
 
@@ -1058,6 +862,7 @@ img {
 
 .history-search-wrapper {
   position: relative;
+
   z-index: 50;
 }
 
@@ -1065,6 +870,7 @@ img {
   min-height: 54px;
 
   display: flex;
+
   align-items: center;
 
   gap: 10px;
@@ -1080,8 +886,7 @@ img {
   border-radius: 11px;
 
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    0.2s ease;
 }
 
 .history-search-row:focus-within {
@@ -1093,6 +898,8 @@ img {
 
 .history-search-icon {
   flex-shrink: 0;
+
+  font-size: 17px;
 }
 
 .history-search {
@@ -1103,6 +910,7 @@ img {
   height: 50px;
 
   border: none;
+
   outline: none;
 
   background: transparent;
@@ -1131,6 +939,10 @@ img {
   color: #8da3b9;
 }
 
+.clear-history-search:hover {
+  color: #ffffff;
+}
+
 /* =========================================================
    AUTOCOMPLETE
 ========================================================= */
@@ -1138,9 +950,10 @@ img {
 .history-suggestions {
   position: absolute;
 
-  top: calc(100% + 8px);
   left: 0;
   right: 0;
+
+  top: calc(100% + 8px);
 
   max-height: 280px;
 
@@ -1167,7 +980,8 @@ img {
 
   font-size: 11px;
 
-  text-transform: uppercase;
+  text-transform:
+    uppercase;
 
   letter-spacing: 0.8px;
 
@@ -1179,6 +993,7 @@ img {
   width: 100%;
 
   display: flex;
+
   align-items: center;
 
   gap: 10px;
@@ -1200,14 +1015,22 @@ img {
   font-size: 13px;
 }
 
+.history-suggestion:last-child {
+  border-bottom: none;
+}
+
 .history-suggestion:hover {
   background: #142a41;
+
   color: #ffffff !important;
 }
 
 .suggestion-icon {
   width: 22px;
+
   flex-shrink: 0;
+
+  text-align: center;
 }
 
 .suggestion-type {
@@ -1216,14 +1039,19 @@ img {
   color: #5e8fbd !important;
 
   font-size: 9px;
+
   font-weight: 800;
+
+  letter-spacing: 0.5px;
 }
 
 .suggestion-value {
   min-width: 0;
 
   overflow: hidden;
+
   text-overflow: ellipsis;
+
   white-space: nowrap;
 
   color: #d7e3ef !important;
@@ -1235,7 +1063,9 @@ img {
 
 .history-quick-filters {
   display: flex;
+
   align-items: center;
+
   flex-wrap: wrap;
 
   gap: 8px;
@@ -1264,6 +1094,15 @@ img {
   color: #9db0c3 !important;
 
   font-size: 12px;
+
+  transition:
+    0.2s ease;
+}
+
+.quick-filter:hover {
+  background: #182d45;
+
+  color: #dbe7f2 !important;
 }
 
 .quick-filter.active {
@@ -1276,17 +1115,45 @@ img {
 
 .quick-filter.high-filter.active {
   background: #7f2830;
+
   border-color: #d6535c;
 }
 
 .quick-filter.medium-filter.active {
   background: #76521d;
+
   border-color: #c89238;
 }
 
 .quick-filter.low-filter.active {
   background: #1c694c;
+
   border-color: #3ba77c;
+}
+
+/* =========================================================
+   HISTORY ERROR
+========================================================= */
+
+.history-error {
+  margin:
+    12px 0;
+
+  padding: 12px 14px;
+
+  border:
+    1px solid rgba(255, 90, 100, 0.3);
+
+  border-radius: 9px;
+
+  background:
+    rgba(130, 25, 35, 0.12);
+
+  color: #ff9ba1 !important;
+
+  font-size: 12px;
+
+  line-height: 1.5;
 }
 
 /* =========================================================
@@ -1297,8 +1164,11 @@ img {
   min-height: 48px;
 
   display: flex;
+
   align-items: center;
-  justify-content: space-between;
+
+  justify-content:
+    space-between;
 
   gap: 15px;
 
@@ -1314,6 +1184,7 @@ img {
 
 .select-all-control {
   display: flex;
+
   align-items: center;
 
   gap: 9px;
@@ -1323,6 +1194,7 @@ img {
   font-size: 13px;
 
   cursor: pointer;
+
   user-select: none;
 }
 
@@ -1334,10 +1206,13 @@ img {
   margin: 0;
 
   accent-color: #268cff;
+
+  cursor: pointer;
 }
 
 .history-action-right {
   display: flex;
+
   align-items: center;
 
   gap: 12px;
@@ -1350,9 +1225,6 @@ img {
 }
 
 .delete-selected {
-  padding:
-    8px 12px;
-
   border:
     1px solid #71343a;
 
@@ -1362,12 +1234,18 @@ img {
 
   color: #ff9298 !important;
 
+  padding:
+    8px 12px;
+
   font-size: 12px;
+
   font-weight: 700;
 }
 
 .delete-selected:hover {
   background: #5a252c;
+
+  color: #ffffff !important;
 }
 
 /* =========================================================
@@ -1376,6 +1254,7 @@ img {
 
 .history-list {
   display: flex;
+
   flex-direction: column;
 
   gap: 9px;
@@ -1383,10 +1262,15 @@ img {
   margin-top: 15px;
 }
 
+/* =========================================================
+   HISTORY ITEM
+========================================================= */
+
 .history-item {
   min-height: 76px;
 
   display: flex;
+
   align-items: center;
 
   gap: 13px;
@@ -1402,12 +1286,12 @@ img {
   border-radius: 11px;
 
   transition:
-    background 0.2s ease,
-    border-color 0.2s ease;
+    0.2s ease;
 }
 
 .history-item:hover {
   background: #10243a;
+
   border-color: #2d4e6c;
 }
 
@@ -1420,6 +1304,7 @@ img {
 
 .history-info {
   flex: 1;
+
   min-width: 0;
 }
 
@@ -1427,10 +1312,13 @@ img {
   color: #e5edf5 !important;
 
   font-size: 14px;
+
   font-weight: 700;
 
   overflow: hidden;
+
   text-overflow: ellipsis;
+
   white-space: nowrap;
 }
 
@@ -1442,7 +1330,9 @@ img {
   font-size: 11px;
 
   overflow: hidden;
+
   text-overflow: ellipsis;
+
   white-space: nowrap;
 }
 
@@ -1454,7 +1344,9 @@ img {
   font-size: 11px;
 
   overflow: hidden;
+
   text-overflow: ellipsis;
+
   white-space: nowrap;
 }
 
@@ -1462,17 +1354,22 @@ img {
   min-width: 75px;
 
   display: flex;
+
   flex-direction: column;
+
   align-items: flex-end;
 
   gap: 3px;
 
   font-size: 13px;
+
   font-weight: 800;
 }
 
 .history-risk span {
   font-size: 9px;
+
+  letter-spacing: 0.5px;
 }
 
 .history-risk.low-risk {
@@ -1531,10 +1428,10 @@ img {
 }
 
 .history-loading h3 {
+  color: #d8e3ee !important;
+
   margin:
     18px 0 7px;
-
-  color: #d8e3ee !important;
 }
 
 .history-loading p {
@@ -1545,10 +1442,9 @@ img {
   font-size: 13px;
 }
 
-.history-spinner,
-.loading-spinner {
-  width: 36px;
-  height: 36px;
+.history-spinner {
+  width: 35px;
+  height: 35px;
 
   margin: 0 auto;
 
@@ -1560,12 +1456,13 @@ img {
   border-radius: 50%;
 
   animation:
-    linkshield-spin 0.8s linear infinite;
+    history-spin 0.8s linear infinite;
 }
 
-@keyframes linkshield-spin {
+@keyframes history-spin {
   to {
-    transform: rotate(360deg);
+    transform:
+      rotate(360deg);
   }
 }
 
@@ -1583,9 +1480,9 @@ img {
 }
 
 .empty-history-icon {
-  margin-bottom: 14px;
-
   font-size: 42px;
+
+  margin-bottom: 14px;
 }
 
 .empty-history h3 {
@@ -1605,9 +1502,9 @@ img {
 
   color: #758ca3 !important;
 
-  font-size: 13px;
-
   line-height: 1.6;
+
+  font-size: 13px;
 }
 
 .clear-filter-button {
@@ -1628,27 +1525,39 @@ img {
   font-size: 12px;
 }
 
+.clear-filter-button:hover {
+  background: #18344e;
+
+  color: #ffffff;
+}
+
 /* =========================================================
    PREVIEW OVERLAY
 ========================================================= */
 
 .preview-overlay {
   position: fixed;
+
   inset: 0;
 
   z-index: 1000;
 
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
-  padding: 20px;
+  padding: 25px;
 
   background:
     rgba(2, 8, 16, 0.85);
 
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter:
+    blur(8px);
+
+  -webkit-backdrop-filter:
+    blur(8px);
 }
 
 .preview-window {
@@ -1659,6 +1568,7 @@ img {
     min(850px, 92vh);
 
   display: flex;
+
   flex-direction: column;
 
   overflow: hidden;
@@ -1678,8 +1588,11 @@ img {
   min-height: 65px;
 
   display: flex;
+
   align-items: center;
-  justify-content: space-between;
+
+  justify-content:
+    space-between;
 
   gap: 15px;
 
@@ -1696,6 +1609,7 @@ img {
   min-width: 0;
 
   display: flex;
+
   flex-direction: column;
 
   gap: 4px;
@@ -1713,7 +1627,9 @@ img {
   font-size: 11px;
 
   overflow: hidden;
+
   text-overflow: ellipsis;
+
   white-space: nowrap;
 }
 
@@ -1730,6 +1646,10 @@ img {
   background: #172b40;
 
   color: #d5e0eb;
+}
+
+.close-preview:hover {
+  background: #293e54;
 }
 
 .preview-warning {
@@ -1761,9 +1681,9 @@ img {
 
   min-height: 0;
 
-  position: relative;
-
   background: #ffffff;
+
+  position: relative;
 }
 
 .safe-preview-frame {
@@ -1780,12 +1700,12 @@ img {
   height: 100%;
 
   display: flex;
+
   flex-direction: column;
 
   align-items: center;
-  justify-content: center;
 
-  padding: 25px;
+  justify-content: center;
 
   text-align: center;
 
@@ -1807,6 +1727,21 @@ img {
   color: #8499ae;
 
   line-height: 1.6;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+
+  border:
+    3px solid #29425b;
+
+  border-top-color: #268cff;
+
+  border-radius: 50%;
+
+  animation:
+    history-spin 0.8s linear infinite;
 }
 
 .preview-error-icon {
@@ -1834,6 +1769,7 @@ img {
   min-height: 50px;
 
   display: flex;
+
   align-items: center;
 
   gap: 20px;
@@ -1854,9 +1790,6 @@ img {
 .preview-footer button {
   margin-left: auto;
 
-  padding:
-    7px 12px;
-
   border:
     1px solid #29435b;
 
@@ -1865,6 +1798,9 @@ img {
   background: #14283c;
 
   color: #bdccda;
+
+  padding:
+    7px 12px;
 }
 
 /* =========================================================
@@ -1875,7 +1811,7 @@ img {
 
   .navbar {
     padding:
-      0 20px;
+      12px 20px;
   }
 
   .security-label {
@@ -1889,6 +1825,8 @@ img {
   .history-section {
     width:
       calc(100% - 24px);
+
+    padding: 22px;
   }
 }
 
@@ -1898,11 +1836,26 @@ img {
 
 @media (max-width: 650px) {
 
+  body {
+    overflow-x: hidden;
+  }
+
+  .app {
+    width: 100%;
+  }
+
+  /* ---------------- NAVBAR ---------------- */
+
   .navbar {
-    min-height: 62px;
+    min-height: auto;
+
+    width: 100%;
 
     padding:
-      10px 14px;
+      12px 15px;
+
+    align-items:
+      center;
 
     gap: 10px;
   }
@@ -1911,125 +1864,98 @@ img {
     font-size: 18px;
   }
 
-  .logo img {
-    width: 25px;
-    height: 25px;
+  .nav-right {
+    flex-wrap: wrap;
+
+    justify-content:
+      flex-end;
+
+    gap: 6px;
   }
 
-  .nav-right {
-    gap: 5px;
+  .security-label {
+    display: none;
   }
 
   .user-info {
-    max-width: 100px;
+    max-width: 130px;
 
     font-size: 11px;
   }
 
   .history-button,
   .logout-button {
-    min-height: 34px;
-
     padding:
-      7px 9px;
+      8px 10px;
 
     font-size: 11px;
   }
+
+  /* ---------------- HERO ---------------- */
 
   .hero {
     width:
       calc(100% - 20px);
 
     padding:
-      52px 5px 65px;
-  }
-
-  .badge {
-    padding:
-      8px 13px;
-
-    font-size: 9px;
-
-    letter-spacing: 1.3px;
+      55px 5px 50px;
   }
 
   .hero h1 {
-    max-width: 550px;
-
-    margin:
-      21px auto 16px;
-
     font-size:
-      clamp(38px, 11vw, 55px);
+      clamp(38px,
+        12vw,
+        55px);
 
-    line-height: 1.02;
-
-    letter-spacing: -2.5px;
+    letter-spacing:
+      -2px;
   }
 
   .hero-description {
-    max-width: 360px;
-
-    margin-bottom: 30px;
-
     font-size: 14px;
 
     line-height: 1.65;
   }
 
-  .scanner {
-    width: 100%;
+  /* ---------------- SCANNER ---------------- */
 
-    flex-direction: column;
+  .scanner {
+    flex-direction:
+      column;
 
     padding: 8px;
 
-    border-radius: 16px;
+    border-radius: 14px;
   }
 
   .scanner input {
     width: 100%;
 
-    height: 52px;
+    min-height: 50px;
 
-    padding:
-      0 15px;
-
-    font-size: 14px;
+    height: 50px;
   }
 
   .scanner button {
     width: 100%;
 
-    min-width: 0;
+    min-height: 50px;
 
-    height: 54px;
-
-    font-size: 14px;
+    height: 50px;
   }
 
-  .scanner::after {
-    display: none;
-  }
+  /* ---------------- RESULT ---------------- */
 
   .result {
-    width:
-      calc(100% - 20px);
-
-    margin-top: 35px;
+    width: 100%;
 
     padding:
       22px 17px;
 
-    border-radius: 16px;
+    border-radius: 15px;
   }
 
-  .score {
-    width: 98px;
-    height: 98px;
-
-    font-size: 22px;
-  }
+  /* ---------------- HISTORY ---------------- */
 
   .history-section {
     width:
@@ -2041,40 +1967,114 @@ img {
     padding: 18px;
 
     border-radius: 14px;
+
+    /*
+      Prevent any external/global text color
+      from making History headings black.
+    */
+    color: #ffffff !important;
+  }
+
+  .history-section h2,
+  .history-section h3 {
+    color: #ffffff !important;
   }
 
   .history-header {
-    align-items: flex-start;
+    align-items:
+      flex-start;
 
     gap: 12px;
   }
 
   .history-header h2 {
     font-size: 21px;
+
+    line-height: 1.3;
   }
 
   .history-header p {
     font-size: 12px;
+
+    line-height: 1.65;
   }
 
-  .history-actions {
-    align-items: flex-start;
+  .close-history {
+    width: 38px;
+    height: 38px;
+  }
 
-    flex-direction: column;
+  /* ---------------- SEARCH ---------------- */
+
+  .history-search-row {
+    min-height: 52px;
+
+    padding:
+      0 12px;
+  }
+
+  .history-search {
+    height: 48px;
+
+    font-size: 13px;
+  }
+
+  .history-suggestions {
+    max-height: 230px;
+  }
+
+  /* ---------------- FILTERS ---------------- */
+
+  .history-quick-filters {
+    gap: 6px;
+
+    margin:
+      16px 0;
+  }
+
+  .quick-filter-label {
+    width: 100%;
+
+    margin-bottom: 1px;
+  }
+
+  .quick-filter {
+    padding:
+      7px 10px;
+
+    font-size: 11px;
+  }
+
+  /* ---------------- ACTIONS ---------------- */
+
+  .history-actions {
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+
+    gap: 10px;
   }
 
   .history-action-right {
     width: 100%;
 
-    justify-content: space-between;
+    justify-content:
+      space-between;
   }
 
+  /* ---------------- HISTORY CARD ---------------- */
+
   .history-item {
-    align-items: flex-start;
+    align-items:
+      flex-start;
+
+    gap: 9px;
 
     padding: 11px;
 
-    gap: 9px;
+    border-radius: 10px;
   }
 
   .history-site-name {
@@ -2082,13 +2082,14 @@ img {
   }
 
   .history-url {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .history-meta {
-    white-space: normal;
-
     font-size: 10px;
+
+    white-space:
+      normal;
 
     line-height: 1.5;
   }
@@ -2108,20 +2109,22 @@ img {
     height: 31px;
   }
 
+  /* ---------------- PREVIEW ---------------- */
+
   .preview-overlay {
     padding: 8px;
   }
 
   .preview-window {
     width: 100%;
-    height: 96dvh;
+
+    height: 96vh;
 
     border-radius: 10px;
   }
 
   .preview-header {
-    padding:
-      10px;
+    padding: 10px;
   }
 
   .preview-footer {
@@ -2136,27 +2139,44 @@ img {
 @media (max-width: 450px) {
 
   .navbar {
+    /*
+      Keep logo and navigation usable on narrow screens.
+      Do NOT force everything into an oversized column.
+    */
+    flex-wrap: wrap;
+
+    align-items:
+      center;
+
     padding:
-      9px 11px;
+      11px 12px;
   }
 
   .logo {
+    flex: 1;
+
+    min-width: 0;
+
     font-size: 17px;
   }
 
-  .logo img {
-    width: 23px;
-    height: 23px;
+  .nav-right {
+    flex: 1;
+
+    min-width: 0;
+
+    justify-content:
+      flex-end;
   }
 
   .user-info {
-    max-width: 82px;
+    max-width: 120px;
   }
 
   .history-button,
   .logout-button {
     padding:
-      7px 8px;
+      7px 9px;
 
     font-size: 10px;
   }
@@ -2164,26 +2184,29 @@ img {
   .hero {
     width:
       calc(100% - 12px);
+  }
 
-    padding-top: 43px;
+  .badge {
+    font-size: 9px;
+
+    letter-spacing: 1px;
   }
 
   .hero h1 {
-    font-size: 38px;
-
-    letter-spacing: -1.8px;
-  }
-
-  .hero-description {
-    font-size: 13px;
+    letter-spacing:
+      -1.5px;
   }
 
   .result {
-    width:
-      calc(100% - 12px);
-
     padding:
-      19px 14px;
+      18px 13px;
+  }
+
+  .score {
+    width: 90px;
+    height: 90px;
+
+    font-size: 21px;
   }
 
   .history-section {
@@ -2203,7 +2226,8 @@ img {
   }
 
   .history-action-right {
-    flex-wrap: wrap;
+    flex-wrap:
+      wrap;
   }
 
   .delete-selected {
@@ -2211,7 +2235,8 @@ img {
   }
 
   .history-item {
-    flex-wrap: wrap;
+    flex-wrap:
+      wrap;
   }
 
   .history-info {
@@ -2220,7 +2245,8 @@ img {
   }
 
   .history-risk {
-    margin-left: 25px;
+    margin-left:
+      25px;
   }
 
   .preview-footer span:nth-child(2) {
@@ -2234,48 +2260,48 @@ img {
 }
 
 /* =========================================================
-   EXTRA SMALL
+   EXTRA SMALL PHONES
 ========================================================= */
 
 @media (max-width: 360px) {
 
   .navbar {
     padding:
-      8px 9px;
+      10px;
   }
 
   .logo {
     font-size: 16px;
   }
 
-  .logo img {
-    width: 21px;
-    height: 21px;
-  }
-
   .user-info {
-    max-width: 65px;
+    max-width: 95px;
   }
 
   .history-button,
   .logout-button {
     padding:
-      6px 7px;
+      7px 8px;
 
     font-size: 9px;
   }
 
   .hero {
-    padding-top: 38px;
+    padding-top: 42px;
   }
 
   .hero h1 {
-    font-size: 35px;
+    font-size: 36px;
   }
 
   .history-section {
     padding:
       13px;
+  }
+
+  .history-search-row {
+    padding:
+      0 9px;
   }
 
   .quick-filter {
@@ -2287,7 +2313,556 @@ img {
 }
 
 /* =========================================================
-   TOUCH
+   ACCESSIBILITY / TOUCH
+========================================================= */
+
+@media (hover: none) {
+
+  .history-item:hover {
+    background: #0d1d2e;
+    border-color: #203950;
+  }
+
+  .quick-filter:hover {
+    background: #101f31;
+    color: #9db0c3 !important;
+  }
+
+  .delete-history:hover {
+    background: #172333;
+    border-color: #3b3035;
+    color: #e06a72;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =========================================================
+   LINKSHIELD — CYBER SECURITY UI ENHANCEMENT
+   Paste this AFTER the existing CSS
+========================================================= */
+
+/* ---------- APP BACKGROUND ---------- */
+
+.app {
+  background:
+    radial-gradient(circle at 50% -10%,
+      rgba(38, 140, 255, 0.18),
+      transparent 38%),
+    radial-gradient(circle at 10% 45%,
+      rgba(20, 95, 180, 0.07),
+      transparent 30%),
+    #040d1a;
+}
+
+/* ---------- NAVBAR ---------- */
+
+.navbar {
+  min-height: 68px;
+  padding: 0 6%;
+  background: rgba(4, 13, 26, 0.88);
+  border-bottom: 1px solid rgba(67, 139, 210, 0.16);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 21px;
+  letter-spacing: -0.4px;
+}
+
+.logo::before {
+  content: "🛡️";
+  font-size: 20px;
+  filter: drop-shadow(0 0 8px rgba(38, 140, 255, 0.5));
+}
+
+.history-button,
+.logout-button {
+  background: rgba(15, 31, 50, 0.8);
+  border-color: rgba(67, 126, 177, 0.35);
+  transition: all 0.25s ease;
+}
+
+.history-button:hover,
+.logout-button:hover {
+  transform: translateY(-1px);
+  background: rgba(26, 54, 84, 0.9);
+  border-color: #268cff;
+  box-shadow: 0 0 18px rgba(38, 140, 255, 0.12);
+}
+
+/* ---------- HERO ---------- */
+
+.hero {
+  position: relative;
+  padding-top: 85px;
+  padding-bottom: 90px;
+}
+
+/* subtle cyber grid */
+
+.hero::before {
+  content: "";
+  position: absolute;
+
+  top: 0;
+  left: 50%;
+
+  width: 100vw;
+  height: 620px;
+
+  transform: translateX(-50%);
+
+  pointer-events: none;
+
+  background-image:
+    linear-gradient(rgba(70, 130, 190, 0.035) 1px,
+      transparent 1px),
+    linear-gradient(90deg,
+      rgba(70, 130, 190, 0.035) 1px,
+      transparent 1px);
+
+  background-size: 45px 45px;
+
+  mask-image:
+    linear-gradient(to bottom,
+      black,
+      transparent);
+
+  z-index: 0;
+}
+
+.hero>* {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- SECURITY BADGE ---------- */
+
+.badge {
+  padding: 9px 17px;
+
+  border: 1px solid rgba(38, 140, 255, 0.35);
+
+  background:
+    linear-gradient(135deg,
+      rgba(38, 140, 255, 0.12),
+      rgba(80, 95, 220, 0.06));
+
+  color: #65b4ff;
+
+  box-shadow:
+    0 0 25px rgba(38, 140, 255, 0.08),
+    inset 0 0 15px rgba(38, 140, 255, 0.03);
+
+  backdrop-filter: blur(10px);
+
+  font-size: 10px;
+  letter-spacing: 1.8px;
+}
+
+/* ---------- HERO HEADING ---------- */
+
+.hero h1 {
+  max-width: 900px;
+  margin: 25px auto 20px;
+
+  font-size: clamp(44px, 7vw, 78px);
+
+  line-height: 0.98;
+
+  font-weight: 850;
+
+  letter-spacing: -4px;
+
+  text-shadow:
+    0 10px 45px rgba(0, 0, 0, 0.25);
+}
+
+.hero h1 span {
+  background:
+    linear-gradient(90deg,
+      #3d91ff,
+      #65c0ff,
+      #4c72ff);
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+
+  text-shadow: none;
+}
+
+/* ---------- DESCRIPTION ---------- */
+
+.hero-description {
+  max-width: 690px;
+
+  color: #8fa7c0;
+
+  font-size: 16px;
+
+  line-height: 1.8;
+}
+
+/* =========================================================
+   SCANNER — MAIN PRODUCT AREA
+========================================================= */
+
+.scanner {
+  position: relative;
+
+  width: min(850px, 100%);
+
+  padding: 9px;
+
+  background:
+    linear-gradient(145deg,
+      rgba(18, 39, 63, 0.96),
+      rgba(7, 22, 38, 0.96));
+
+  border: 1px solid rgba(64, 126, 180, 0.4);
+
+  border-radius: 18px;
+
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.42),
+    0 0 45px rgba(28, 119, 220, 0.08);
+
+  overflow: hidden;
+}
+
+.scanner::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 1px;
+
+  background:
+    linear-gradient(90deg,
+      transparent,
+      rgba(73, 164, 255, 0.8),
+      transparent);
+}
+
+.scanner input {
+  height: 58px;
+
+  padding-left: 20px;
+
+  color: #f5f9ff;
+
+  font-size: 15px;
+}
+
+.scanner input::placeholder {
+  color: #637d98;
+}
+
+.scanner button {
+  min-width: 165px;
+
+  height: 58px;
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(135deg,
+      #1677ff,
+      #315eea);
+
+  box-shadow:
+    0 8px 25px rgba(22, 119, 255, 0.22);
+
+  font-size: 14px;
+
+  letter-spacing: 0.1px;
+}
+
+.scanner button:hover:not(:disabled) {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 12px 35px rgba(22, 119, 255, 0.38);
+}
+
+/* =========================================================
+   SCANNER SECURITY STATUS
+========================================================= */
+
+.scanner::after {
+  content: "●  LINK ANALYSIS READY";
+
+  position: absolute;
+
+  left: 20px;
+  bottom: -29px;
+
+  color: #4f779d;
+
+  font-size: 9px;
+
+  font-weight: 700;
+
+  letter-spacing: 1.3px;
+}
+
+/* =========================================================
+   RESULT CARD
+========================================================= */
+
+.result {
+  width: min(850px, 100%);
+
+  margin-top: 65px;
+
+  padding: 35px;
+
+  background:
+    linear-gradient(145deg,
+      rgba(13, 31, 50, 0.98),
+      rgba(7, 20, 34, 0.98));
+
+  border:
+    1px solid rgba(63, 112, 153, 0.35);
+
+  border-radius: 20px;
+
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.4);
+}
+
+/* ---------- SCORE ---------- */
+
+.score {
+  width: 118px;
+  height: 118px;
+
+  border-width: 7px;
+
+  background:
+    radial-gradient(circle,
+      rgba(30, 90, 150, 0.14),
+      transparent 68%);
+
+  box-shadow:
+    0 0 35px currentColor;
+}
+
+/* ---------- RISK METER ---------- */
+
+.risk-meter {
+  height: 12px;
+
+  background: #091827;
+
+  border: 1px solid #1d3851;
+
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.risk-meter-fill {
+  box-shadow:
+    0 0 15px currentColor;
+}
+
+/* =========================================================
+   HIGH RISK WARNING
+========================================================= */
+
+.high-risk-warning {
+  background:
+    linear-gradient(135deg,
+      rgba(150, 25, 35, 0.16),
+      rgba(90, 15, 25, 0.08));
+
+  border:
+    1px solid rgba(255, 76, 88, 0.35);
+
+  box-shadow:
+    0 0 30px rgba(255, 60, 70, 0.06);
+}
+
+/* =========================================================
+   AI ANALYSIS
+========================================================= */
+
+.ai-box {
+  background:
+    linear-gradient(145deg,
+      rgba(18, 43, 69, 0.8),
+      rgba(9, 27, 46, 0.8));
+
+  border-color:
+    rgba(66, 135, 194, 0.35);
+
+  box-shadow:
+    inset 0 0 25px rgba(40, 120, 200, 0.03);
+}
+
+.recommendation {
+  display: inline-block;
+
+  margin-top: 8px;
+
+  color: #67b7ff;
+
+  font-weight: 700;
+}
+
+/* =========================================================
+   HISTORY
+========================================================= */
+
+.history-section {
+  background:
+    linear-gradient(145deg,
+      rgba(13, 31, 50, 0.98),
+      rgba(7, 20, 34, 0.98));
+
+  border-color:
+    rgba(63, 112, 153, 0.4);
+
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.4);
+}
+
+/* =========================================================
+   MOBILE — MORE PROFESSIONAL
+========================================================= */
+
+@media (max-width: 650px) {
+
+  .navbar {
+    padding: 12px 14px;
+  }
+
+  .hero {
+    padding-top: 55px;
+    padding-bottom: 65px;
+  }
+
+  .hero h1 {
+    font-size: clamp(39px, 12vw, 55px);
+
+    line-height: 1.02;
+
+    letter-spacing: -2.5px;
+  }
+
+  .hero-description {
+    max-width: 340px;
+
+    font-size: 14px;
+
+    color: #899fb7;
+  }
+
+  .scanner {
+    width: 100%;
+
+    padding: 8px;
+
+    border-radius: 16px;
+  }
+
+  .scanner input {
+    height: 52px;
+
+    font-size: 14px;
+  }
+
+  .scanner button {
+    height: 54px;
+
+    width: 100%;
+
+    font-size: 14px;
+  }
+
+  .scanner::after {
+    display: none;
+  }
+
+  .result {
+    margin-top: 35px;
+
+    padding: 22px 17px;
+
+    border-radius: 16px;
+  }
+
+  .score {
+    width: 98px;
+    height: 98px;
+
+    font-size: 22px;
+  }
+}
+
+/* =========================================================
+   SMALL PHONE
+========================================================= */
+
+@media (max-width: 450px) {
+
+  .navbar {
+    padding: 10px 11px;
+  }
+
+  .logo {
+    font-size: 17px;
+  }
+
+  .hero {
+    padding-top: 45px;
+  }
+
+  .hero h1 {
+    font-size: 38px;
+
+    letter-spacing: -1.8px;
+  }
+
+  .hero-description {
+    font-size: 13px;
+  }
+
+  .scanner input {
+    font-size: 13px;
+  }
+
+  .scanner button {
+    font-size: 13px;
+  }
+
+  .result {
+    padding: 20px 14px;
+  }
+}
+
+/* =========================================================
+   TOUCH DEVICES
 ========================================================= */
 
 @media (hover: none) {
@@ -2300,30 +2875,747 @@ img {
   .logout-button:hover {
     transform: none;
   }
+}
 
-  .history-item:hover {
-    background: #0d1d2e;
-    border-color: #203950;
+/* =========================================================
+   LINKSHIELD — CYBER SECURITY UI ENHANCEMENT
+   Paste this AFTER the existing CSS
+========================================================= */
+
+/* ---------- APP BACKGROUND ---------- */
+
+.app {
+  background:
+    radial-gradient(circle at 50% -10%,
+      rgba(38, 140, 255, 0.18),
+      transparent 38%),
+    radial-gradient(circle at 10% 45%,
+      rgba(20, 95, 180, 0.07),
+      transparent 30%),
+    #040d1a;
+}
+
+/* ---------- NAVBAR ---------- */
+
+.navbar {
+  min-height: 68px;
+  padding: 0 6%;
+  background: rgba(4, 13, 26, 0.88);
+  border-bottom: 1px solid rgba(67, 139, 210, 0.16);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 21px;
+  letter-spacing: -0.4px;
+}
+
+.logo::before {
+  content: "🛡️";
+  font-size: 20px;
+  filter: drop-shadow(0 0 8px rgba(38, 140, 255, 0.5));
+}
+
+.history-button,
+.logout-button {
+  background: rgba(15, 31, 50, 0.8);
+  border-color: rgba(67, 126, 177, 0.35);
+  transition: all 0.25s ease;
+}
+
+.history-button:hover,
+.logout-button:hover {
+  transform: translateY(-1px);
+  background: rgba(26, 54, 84, 0.9);
+  border-color: #268cff;
+  box-shadow: 0 0 18px rgba(38, 140, 255, 0.12);
+}
+
+/* ---------- HERO ---------- */
+
+.hero {
+  position: relative;
+  padding-top: 85px;
+  padding-bottom: 90px;
+}
+
+/* subtle cyber grid */
+
+.hero::before {
+  content: "";
+  position: absolute;
+
+  top: 0;
+  left: 50%;
+
+  width: 100vw;
+  height: 620px;
+
+  transform: translateX(-50%);
+
+  pointer-events: none;
+
+  background-image:
+    linear-gradient(rgba(70, 130, 190, 0.035) 1px,
+      transparent 1px),
+    linear-gradient(90deg,
+      rgba(70, 130, 190, 0.035) 1px,
+      transparent 1px);
+
+  background-size: 45px 45px;
+
+  mask-image:
+    linear-gradient(to bottom,
+      black,
+      transparent);
+
+  z-index: 0;
+}
+
+.hero>* {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- SECURITY BADGE ---------- */
+
+.badge {
+  padding: 9px 17px;
+
+  border: 1px solid rgba(38, 140, 255, 0.35);
+
+  background:
+    linear-gradient(135deg,
+      rgba(38, 140, 255, 0.12),
+      rgba(80, 95, 220, 0.06));
+
+  color: #65b4ff;
+
+  box-shadow:
+    0 0 25px rgba(38, 140, 255, 0.08),
+    inset 0 0 15px rgba(38, 140, 255, 0.03);
+
+  backdrop-filter: blur(10px);
+
+  font-size: 10px;
+  letter-spacing: 1.8px;
+}
+
+/* ---------- HERO HEADING ---------- */
+
+.hero h1 {
+  max-width: 900px;
+  margin: 25px auto 20px;
+
+  font-size: clamp(44px, 7vw, 78px);
+
+  line-height: 0.98;
+
+  font-weight: 850;
+
+  letter-spacing: -4px;
+
+  text-shadow:
+    0 10px 45px rgba(0, 0, 0, 0.25);
+}
+
+.hero h1 span {
+  background:
+    linear-gradient(90deg,
+      #3d91ff,
+      #65c0ff,
+      #4c72ff);
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+
+  text-shadow: none;
+}
+
+/* ---------- DESCRIPTION ---------- */
+
+.hero-description {
+  max-width: 690px;
+
+  color: #8fa7c0;
+
+  font-size: 16px;
+
+  line-height: 1.8;
+}
+
+/* =========================================================
+   SCANNER — MAIN PRODUCT AREA
+========================================================= */
+
+.scanner {
+  position: relative;
+
+  width: min(850px, 100%);
+
+  padding: 9px;
+
+  background:
+    linear-gradient(145deg,
+      rgba(18, 39, 63, 0.96),
+      rgba(7, 22, 38, 0.96));
+
+  border: 1px solid rgba(64, 126, 180, 0.4);
+
+  border-radius: 18px;
+
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.42),
+    0 0 45px rgba(28, 119, 220, 0.08);
+
+  overflow: hidden;
+}
+
+.scanner::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 1px;
+
+  background:
+    linear-gradient(90deg,
+      transparent,
+      rgba(73, 164, 255, 0.8),
+      transparent);
+}
+
+.scanner input {
+  height: 58px;
+
+  padding-left: 20px;
+
+  color: #f5f9ff;
+
+  font-size: 15px;
+}
+
+.scanner input::placeholder {
+  color: #637d98;
+}
+
+.scanner button {
+  min-width: 165px;
+
+  height: 58px;
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(135deg,
+      #1677ff,
+      #315eea);
+
+  box-shadow:
+    0 8px 25px rgba(22, 119, 255, 0.22);
+
+  font-size: 14px;
+
+  letter-spacing: 0.1px;
+}
+
+.scanner button:hover:not(:disabled) {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 12px 35px rgba(22, 119, 255, 0.38);
+}
+
+/* =========================================================
+   SCANNER SECURITY STATUS
+========================================================= */
+
+.scanner::after {
+  content: "●  LINK ANALYSIS READY";
+
+  position: absolute;
+
+  left: 20px;
+  bottom: -29px;
+
+  color: #4f779d;
+
+  font-size: 9px;
+
+  font-weight: 700;
+
+  letter-spacing: 1.3px;
+}
+
+/* =========================================================
+   RESULT CARD
+========================================================= */
+
+.result {
+  width: min(850px, 100%);
+
+  margin-top: 65px;
+
+  padding: 35px;
+
+  background:
+    linear-gradient(145deg,
+      rgba(13, 31, 50, 0.98),
+      rgba(7, 20, 34, 0.98));
+
+  border:
+    1px solid rgba(63, 112, 153, 0.35);
+
+  border-radius: 20px;
+
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.4);
+}
+
+/* ---------- SCORE ---------- */
+
+.score {
+  width: 118px;
+  height: 118px;
+
+  border-width: 7px;
+
+  background:
+    radial-gradient(circle,
+      rgba(30, 90, 150, 0.14),
+      transparent 68%);
+
+  box-shadow:
+    0 0 35px currentColor;
+}
+
+/* ---------- RISK METER ---------- */
+
+.risk-meter {
+  height: 12px;
+
+  background: #091827;
+
+  border: 1px solid #1d3851;
+
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.risk-meter-fill {
+  box-shadow:
+    0 0 15px currentColor;
+}
+
+/* =========================================================
+   HIGH RISK WARNING
+========================================================= */
+
+.high-risk-warning {
+  background:
+    linear-gradient(135deg,
+      rgba(150, 25, 35, 0.16),
+      rgba(90, 15, 25, 0.08));
+
+  border:
+    1px solid rgba(255, 76, 88, 0.35);
+
+  box-shadow:
+    0 0 30px rgba(255, 60, 70, 0.06);
+}
+
+/* =========================================================
+   AI ANALYSIS
+========================================================= */
+
+.ai-box {
+  background:
+    linear-gradient(145deg,
+      rgba(18, 43, 69, 0.8),
+      rgba(9, 27, 46, 0.8));
+
+  border-color:
+    rgba(66, 135, 194, 0.35);
+
+  box-shadow:
+    inset 0 0 25px rgba(40, 120, 200, 0.03);
+}
+
+.recommendation {
+  display: inline-block;
+
+  margin-top: 8px;
+
+  color: #67b7ff;
+
+  font-weight: 700;
+}
+
+/* =========================================================
+   HISTORY
+========================================================= */
+
+.history-section {
+  background:
+    linear-gradient(145deg,
+      rgba(13, 31, 50, 0.98),
+      rgba(7, 20, 34, 0.98));
+
+  border-color:
+    rgba(63, 112, 153, 0.4);
+
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.4);
+}
+
+/* =========================================================
+   MOBILE — MORE PROFESSIONAL
+========================================================= */
+
+@media (max-width: 650px) {
+
+  .navbar {
+    padding: 12px 14px;
   }
 
-  .delete-history:hover {
-    background: #172333;
-    border-color: #3b3035;
+  .hero {
+    padding-top: 55px;
+    padding-bottom: 65px;
+  }
+
+  .hero h1 {
+    font-size: clamp(39px, 12vw, 55px);
+
+    line-height: 1.02;
+
+    letter-spacing: -2.5px;
+  }
+
+  .hero-description {
+    max-width: 340px;
+
+    font-size: 14px;
+
+    color: #899fb7;
+  }
+
+  .scanner {
+    width: 100%;
+
+    padding: 8px;
+
+    border-radius: 16px;
+  }
+
+  .scanner input {
+    height: 52px;
+
+    font-size: 14px;
+  }
+
+  .scanner button {
+    height: 54px;
+
+    width: 100%;
+
+    font-size: 14px;
+  }
+
+  .scanner::after {
+    display: none;
+  }
+
+  .result {
+    margin-top: 35px;
+
+    padding: 22px 17px;
+
+    border-radius: 16px;
+  }
+
+  .score {
+    width: 98px;
+    height: 98px;
+
+    font-size: 22px;
   }
 }
 
 /* =========================================================
-   REDUCED MOTION
+   SMALL PHONE
 ========================================================= */
 
-@media (prefers-reduced-motion: reduce) {
+@media (max-width: 450px) {
 
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  .navbar {
+    padding: 10px 11px;
+  }
+
+  .logo {
+    font-size: 17px;
+  }
+
+  .hero {
+    padding-top: 45px;
+  }
+
+  .hero h1 {
+    font-size: 38px;
+
+    letter-spacing: -1.8px;
+  }
+
+  .hero-description {
+    font-size: 13px;
+  }
+
+  .scanner input {
+    font-size: 13px;
+  }
+
+  .scanner button {
+    font-size: 13px;
+  }
+
+  .result {
+    padding: 20px 14px;
+  }
+}
+
+/* =========================================================
+   TOUCH DEVICES
+========================================================= */
+
+@media (hover: none) {
+
+  .scanner button:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .history-button:hover,
+  .logout-button:hover {
+    transform: none;
+  }
+}
+
+/* =========================================================
+   LINKSHIELD FINAL RESPONSIVE / BRAND FIX
+   Added after the existing styles so these rules win cleanly.
+========================================================= */
+
+.logo {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.navbar-logo-image {
+  display: block;
+  width: 128px;
+  height: auto;
+  max-height: 34px;
+  object-fit: contain;
+}
+
+.history-button,
+.logout-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.nav-button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* Prevent mobile browser viewport/address-bar changes from making
+   the main page feel vertically broken. */
+.app {
+  min-height: 100dvh;
+}
+
+.hero {
+  width: min(1050px, calc(100% - 30px));
+}
+
+@media (max-width: 650px) {
+  .navbar {
+    min-height: 64px;
+    padding: 10px 13px;
+    gap: 8px;
+  }
+
+  .navbar-logo-image {
+    width: 112px;
+    max-height: 30px;
+  }
+
+  .nav-right {
+    gap: 6px;
+    flex: 1 1 auto;
+  }
+
+  .security-label {
+    display: none;
+  }
+
+  .user-info {
+    max-width: 92px;
+    font-size: 12px;
+  }
+
+  .history-button,
+  .logout-button {
+    min-height: 38px;
+    padding: 7px 9px;
+    border-radius: 10px;
+    font-size: 11px;
+  }
+
+  .hero {
+    width: min(100%, calc(100% - 24px));
+    padding: 48px 8px 70px;
+  }
+
+  .badge {
+    max-width: 100%;
+    padding: 8px 12px;
+    font-size: 9px;
+    letter-spacing: 1.4px;
+  }
+
+  .hero h1 {
+    max-width: 100%;
+    margin: 22px auto 17px;
+    font-size: clamp(36px, 10.8vw, 52px);
+    line-height: 1.02;
+    letter-spacing: -2.4px;
+  }
+
+  .hero-description {
+    max-width: 355px;
+    margin-bottom: 31px;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .scanner {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 16px;
+  }
+
+  .scanner input {
+    width: 100%;
+    height: 50px;
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  .scanner button {
+    width: 100%;
+    min-width: 0;
+    height: 54px;
+    border-radius: 11px;
+    font-size: 14px;
+  }
+
+  .scanner::after {
+    display: none;
+  }
+}
+
+@media (max-width: 430px) {
+  .navbar {
+    padding: 9px 10px;
+  }
+
+  .navbar-logo-image {
+    width: 101px;
+    max-height: 27px;
+  }
+
+  .nav-right {
+    gap: 5px;
+  }
+
+  .user-info {
+    max-width: 76px;
+    font-size: 10.5px;
+  }
+
+  .history-button,
+  .logout-button {
+    min-height: 35px;
+    padding: 6px 7px;
+    font-size: 10px;
+  }
+
+  .nav-button-icon {
+    font-size: 13px;
+  }
+
+  .hero {
+    width: calc(100% - 16px);
+    padding-top: 42px;
+  }
+
+  .hero h1 {
+    font-size: 37px;
+    letter-spacing: -1.8px;
+  }
+
+  .hero-description {
+    max-width: 330px;
+    font-size: 13px;
+  }
+
+  .scanner input {
+    height: 48px;
+    font-size: 13px;
+  }
+
+  .scanner button {
+    height: 52px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .navbar-logo-image {
+    width: 94px;
+  }
+
+  .user-info {
+    max-width: 64px;
+  }
+
+  .history-button,
+  .logout-button {
+    padding-inline: 6px;
+    font-size: 9.5px;
+  }
+
+  .hero h1 {
+    font-size: 35px;
   }
 }

@@ -1284,7 +1284,11 @@ function App() {
       <nav className="navbar">
 
         <div className="logo">
-          🛡️ LinkShield
+          <img
+            src="/linkshield-logo.png"
+            alt="LinkShield"
+            className="navbar-logo-image"
+          />
         </div>
 
         <div className="nav-right">
@@ -1297,21 +1301,24 @@ function App() {
             className="user-info"
             title={userDisplayName}
           >
-            👤 {userDisplayName}
+            {userDisplayName}
           </span>
 
           <button
             className="history-button"
             onClick={openHistory}
+            aria-label="Open scan history"
           >
-            📜 History
+            <span className="nav-button-icon" aria-hidden="true">▤</span>
+            <span>History</span>
           </button>
 
           <button
             className="logout-button"
             onClick={handleLogout}
+            aria-label="Log out"
           >
-            Logout
+            <span>Logout</span>
           </button>
 
         </div>
