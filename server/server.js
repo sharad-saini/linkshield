@@ -24,8 +24,9 @@ const {
 
 const app = express();
 
-app.use(cors());
-
+app.use(cors({
+    origin: "https://linkshield-kappa.vercel.app"
+}));
 app.use(
     express.json({
         limit: "100kb"
