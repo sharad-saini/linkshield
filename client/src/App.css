@@ -3619,3 +3619,289 @@ p {
     font-size: 35px;
   }
 }
+
+/* =========================================================
+   FINAL UI PATCH — v3
+   The rules below intentionally come last so older responsive
+   blocks in this file cannot override the final layout.
+========================================================= */
+
+.app {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.navbar {
+  min-height: 72px;
+  padding: 0 clamp(18px, 4vw, 42px);
+  gap: 18px;
+}
+
+.logo {
+  flex: 0 0 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-logo-image {
+  display: block;
+  width: 150px;
+  height: 34px;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.nav-right {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  gap: 9px;
+}
+
+.security-label,
+.user-info {
+  flex: 0 1 auto;
+}
+
+.user-avatar {
+  display: none;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(74, 137, 195, .35);
+  border-radius: 50%;
+  background: rgba(27, 88, 150, .20);
+  color: #68b3ff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.history-button,
+.logout-button {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.nav-button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+}
+
+.nav-button-icon svg {
+  display: block;
+  width: 17px;
+  height: 17px;
+}
+
+.nav-action-text {
+  display: inline;
+}
+
+.hero {
+  width: min(1050px, calc(100% - 30px));
+  min-height: 0;
+  margin-inline: auto;
+}
+
+@media (max-width: 850px) {
+  .navbar {
+    padding-inline: 18px;
+  }
+
+  .navbar-logo-image {
+    width: 138px;
+  }
+}
+
+@media (max-width: 650px) {
+  .navbar {
+    min-height: 62px;
+    padding: 9px 12px;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .logo {
+    flex: 0 0 auto;
+  }
+
+  .navbar-logo-image {
+    width: 112px;
+    height: 29px;
+  }
+
+  .nav-right {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 5px;
+    flex-wrap: nowrap;
+  }
+
+  .security-label,
+  .user-info {
+    display: none;
+  }
+
+  .user-avatar {
+    display: inline-flex;
+  }
+
+  .history-button,
+  .logout-button {
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0;
+    border-radius: 10px;
+    gap: 0;
+    flex: 0 0 36px;
+    font-size: 0;
+  }
+
+  .nav-action-text {
+    display: none;
+  }
+
+  .nav-button-icon,
+  .nav-button-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .hero {
+    width: calc(100% - 20px);
+    padding: 46px 4px 60px;
+  }
+
+  .badge {
+    max-width: calc(100% - 10px);
+    padding: 8px 12px;
+    font-size: 9px;
+    letter-spacing: 1.3px;
+  }
+
+  .hero h1 {
+    max-width: 100%;
+    margin: 21px auto 16px;
+    font-size: clamp(36px, 10.5vw, 52px);
+    line-height: 1.03;
+    letter-spacing: -2px;
+  }
+
+  .hero-description {
+    max-width: 365px;
+    margin: 0 auto 28px;
+    padding-inline: 5px;
+    font-size: 14px;
+    line-height: 1.62;
+  }
+
+  .scanner {
+    width: 100%;
+    margin-inline: auto;
+    padding: 8px;
+    gap: 8px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 15px;
+  }
+
+  .scanner input {
+    width: 100%;
+    height: 49px;
+    flex: none;
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  .scanner button {
+    width: 100%;
+    min-width: 0;
+    height: 53px;
+    min-height: 53px;
+    border-radius: 10px;
+    padding-inline: 16px;
+    font-size: 14px;
+  }
+
+  .scanner::after {
+    display: none;
+  }
+}
+
+@media (max-width: 430px) {
+  .navbar {
+    padding-inline: 9px;
+  }
+
+  .navbar-logo-image {
+    width: 105px;
+    height: 27px;
+  }
+
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
+    font-size: 11px;
+  }
+
+  .history-button,
+  .logout-button {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    flex-basis: 34px;
+  }
+
+  .hero {
+    width: calc(100% - 14px);
+    padding-top: 40px;
+  }
+
+  .hero h1 {
+    font-size: 36px;
+    letter-spacing: -1.7px;
+  }
+
+  .hero-description {
+    max-width: 335px;
+    font-size: 13.5px;
+  }
+
+  .scanner input {
+    height: 48px;
+    font-size: 13px;
+  }
+
+  .scanner button {
+    height: 51px;
+    min-height: 51px;
+    font-size: 13.5px;
+  }
+}
+
+@media (max-width: 360px) {
+  .navbar-logo-image {
+    width: 98px;
+  }
+
+  .hero h1 {
+    font-size: 34px;
+  }
+}

@@ -1298,6 +1298,13 @@ function App() {
           </span>
 
           <span
+            className="user-avatar"
+            aria-hidden="true"
+          >
+            {(userDisplayName || "G").trim().charAt(0).toUpperCase()}
+          </span>
+
+          <span
             className="user-info"
             title={userDisplayName}
           >
@@ -1308,17 +1315,30 @@ function App() {
             className="history-button"
             onClick={openHistory}
             aria-label="Open scan history"
+            title="Scan history"
           >
-            <span className="nav-button-icon" aria-hidden="true">▤</span>
-            <span>History</span>
+            <span className="nav-button-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M6 4.5h12v15H6z" fill="none" stroke="currentColor" strokeWidth="1.7"/>
+                <path d="M9 8h6M9 11.5h6M9 15h4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
+              </svg>
+            </span>
+            <span className="nav-action-text">History</span>
           </button>
 
           <button
             className="logout-button"
             onClick={handleLogout}
             aria-label="Log out"
+            title="Log out"
           >
-            <span>Logout</span>
+            <span className="nav-button-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M10 5H5.5A1.5 1.5 0 0 0 4 6.5v11A1.5 1.5 0 0 0 5.5 19H10" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
+                <path d="M13 8l4 4-4 4M17 12H9" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+            <span className="nav-action-text">Logout</span>
           </button>
 
         </div>
