@@ -22,7 +22,7 @@ import { saveScan } from "./scanService";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL ||
-  "https://linkshield-ub5b.onrender.com";
+  "https://linkshield-fofk.onrender.com";
 
 /* =========================================================
    HELPERS
