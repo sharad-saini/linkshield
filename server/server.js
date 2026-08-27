@@ -81,8 +81,10 @@ function analyzeURL(inputURL) {
     if (!normalizedURL) {
         return {
             riskScore: 100,
-            level: "HIGH",
-            reasons: ["Invalid or empty URL"]
+            level: "CRITICAL",
+            reasons: ["Invalid or empty URL"],
+            evidenceCount: 1,
+            hasStrongEvidence: true
         };
     }
 
@@ -93,13 +95,16 @@ function analyzeURL(inputURL) {
     } catch {
         return {
             riskScore: 100,
-            level: "HIGH",
-            reasons: ["Invalid URL format"]
+            level: "CRITICAL",
+            reasons: ["Invalid URL format"],
+            evidenceCount: 1,
+            hasStrongEvidence: true
         };
     }
 
     const hostname = url.hostname.toLowerCase();
     const pathname = url.pathname.toLowerCase();
+    const search = url.search.toLowerCase();
     const fullURL = normalizedURL.toLowerCase();
     const reasons = [];
     let score = 0;
@@ -109,26 +114,20 @@ function analyzeURL(inputURL) {
         reasons.push(reason);
     };
 
-    // ---------------------------------------------------------
     // 1. Transport
-    // HTTPS itself is NOT suspicious. HTTP gets only a small hit.
-    // ---------------------------------------------------------
     if (url.protocol !== "https:") {
         add(10, "Connection does not use HTTPS");
     }
 
-    // ---------------------------------------------------------
     // 2. Raw IP destination
-    // ---------------------------------------------------------
     const ipPattern = /^(?:\d{1,3}\.){3}\d{1,3}$/;
+    const isRawIP = ipPattern.test(hostname);
 
-    if (ipPattern.test(hostname)) {
+    if (isRawIP) {
         add(25, "URL uses an IP address instead of a domain");
     }
 
-    // ---------------------------------------------------------
     // 3. User-info / @ deception
-    // ---------------------------------------------------------
     if (url.username || url.password || fullURL.includes("@")) {
         add(
             30,
@@ -136,26 +135,22 @@ function analyzeURL(inputURL) {
         );
     }
 
-    // ---------------------------------------------------------
     // 4. Punycode
-    // ---------------------------------------------------------
     if (hostname.includes("xn--")) {
-        add(15, "Hostname contains a punycode label");
+        add(20, "Hostname contains a punycode label");
     }
 
-    // ---------------------------------------------------------
     // 5. Excessive subdomains
-    // ---------------------------------------------------------
     const hostnameParts = hostname.split(".").filter(Boolean);
     const subdomainCount = Math.max(0, hostnameParts.length - 2);
 
     if (subdomainCount >= 4) {
-        add(8, "URL contains an unusually deep subdomain structure");
+        add(10, "URL contains an unusually deep subdomain structure");
+    } else if (subdomainCount >= 3) {
+        add(5, "URL contains multiple subdomain levels");
     }
 
-    // ---------------------------------------------------------
-    // 6. URL shortening services
-    // ---------------------------------------------------------
+    // 6. URL shorteners
     const shorteners = new Set([
         "bit.ly",
         "tinyurl.com",
@@ -172,23 +167,16 @@ function analyzeURL(inputURL) {
         add(18, "Uses a URL shortening service that hides the final destination");
     }
 
-    // ---------------------------------------------------------
-    // 7. URL complexity
-    // A long URL is not malicious by itself, so the weight is low.
-    // ---------------------------------------------------------
+    // 7. URL complexity / encoding
     if (normalizedURL.length > 220) {
         add(5, "URL is unusually long");
     }
 
     if ((normalizedURL.match(/%[0-9a-f]{2}/gi) || []).length >= 8) {
-        add(5, "URL contains unusually heavy percent-encoding");
+        add(8, "URL contains unusually heavy percent-encoding");
     }
 
-    // ---------------------------------------------------------
     // 8. Credential indicators
-    // These matter more when they appear in a path/query rather than
-    // ordinary words such as 'account' or 'security'.
-    // ---------------------------------------------------------
     const credentialTerms = [
         "password",
         "passwd",
@@ -197,7 +185,8 @@ function analyzeURL(inputURL) {
         "secret",
         "otp",
         "pin",
-        "token"
+        "token",
+        "wallet"
     ];
 
     const credentialMatches = credentialTerms.filter((term) =>
@@ -206,13 +195,13 @@ function analyzeURL(inputURL) {
 
     const hasCredentialSignal = credentialMatches.length > 0;
 
-    if (hasCredentialSignal) {
-        add(10, "URL contains credential-related indicators");
+    if (credentialMatches.length >= 2) {
+        add(18, "URL contains multiple credential-related indicators");
+    } else if (hasCredentialSignal) {
+        add(12, "URL contains a credential-related indicator");
     }
 
-    // ---------------------------------------------------------
     // 9. Sensitive query parameters
-    // ---------------------------------------------------------
     const sensitiveParameters = new Set([
         "password",
         "passwd",
@@ -223,7 +212,8 @@ function analyzeURL(inputURL) {
         "pin",
         "secret",
         "apikey",
-        "api_key"
+        "api_key",
+        "wallet"
     ]);
 
     let sensitiveParameterFound = false;
@@ -236,17 +226,10 @@ function analyzeURL(inputURL) {
     }
 
     if (sensitiveParameterFound) {
-        add(
-            15,
-            "URL contains a sensitive credential-related parameter"
-        );
+        add(15, "URL contains a sensitive credential-related parameter");
     }
 
-    // ---------------------------------------------------------
-    // 10. Authentication paths
-    // IMPORTANT: login/account/verify alone are NOT malicious.
-    // They only contribute when paired with stronger evidence.
-    // ---------------------------------------------------------
+    // 10. Authentication / verification signals
     const authenticationTerms = [
         "login",
         "signin",
@@ -257,7 +240,8 @@ function analyzeURL(inputURL) {
         "confirm",
         "confirmation",
         "reset",
-        "recover"
+        "recover",
+        "security"
     ];
 
     const authenticationMatches = authenticationTerms.filter((term) =>
@@ -265,11 +249,17 @@ function analyzeURL(inputURL) {
     );
 
     const hasAuthenticationSignal = authenticationMatches.length > 0;
-    const multipleAuthenticationSignals = authenticationMatches.length >= 2;
+    const multipleAuthenticationSignals =
+        authenticationMatches.length >= 2;
 
-    if (multipleAuthenticationSignals) {
+    if (authenticationMatches.length >= 4) {
         add(
-            5,
+            12,
+            "URL contains many authentication or account-verification indicators"
+        );
+    } else if (multipleAuthenticationSignals) {
+        add(
+            8,
             "Multiple authentication or account-verification indicators are present"
         );
     }
@@ -281,14 +271,59 @@ function analyzeURL(inputURL) {
 
     if (credentialPathFound && hasCredentialSignal) {
         add(
-            10,
+            12,
             "Authentication-related path is combined with credential indicators"
         );
     }
 
-    // ---------------------------------------------------------
-    // 11. Dangerous downloads
-    // ---------------------------------------------------------
+    // 11. Brand impersonation
+    // A brand keyword in a hostname is high-signal when the actual
+    // registrable domain is not the brand's legitimate domain.
+    const brandDomains = {
+        paypal: ["paypal.com"],
+        microsoft: ["microsoft.com", "live.com", "office.com", "outlook.com"],
+        apple: ["apple.com", "icloud.com"],
+        amazon: ["amazon.com", "amazon.in"],
+        google: ["google.com"],
+        facebook: ["facebook.com", "fb.com"],
+        instagram: ["instagram.com"],
+        netflix: ["netflix.com"],
+        linkedin: ["linkedin.com"],
+        github: ["github.com"],
+        binance: ["binance.com"],
+        coinbase: ["coinbase.com"]
+    };
+
+    const registrableDomain = hostnameParts.length >= 2
+        ? hostnameParts.slice(-2).join(".")
+        : hostname;
+
+    const brandMatches = Object.entries(brandDomains)
+        .filter(([brand]) => {
+            const brandPattern = new RegExp(
+                `(^|[-._])${brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([-. _]|$)`,
+                "i"
+            );
+            return brandPattern.test(hostname);
+        })
+        .map(([brand]) => brand);
+
+    const impersonatedBrands = brandMatches.filter((brand) =>
+        !brandDomains[brand].some(
+            (domain) =>
+                hostname === domain ||
+                hostname.endsWith(`.${domain}`)
+        )
+    );
+
+    if (impersonatedBrands.length > 0) {
+        add(
+            25,
+            `Possible brand impersonation detected: ${impersonatedBrands.join(", ")}`
+        );
+    }
+
+    // 12. Dangerous downloads
     const dangerousExtensions = [
         ".exe",
         ".scr",
@@ -302,27 +337,30 @@ function analyzeURL(inputURL) {
         ".pkg"
     ];
 
-    if (dangerousExtensions.some((extension) => pathname.endsWith(extension))) {
+    if (
+        dangerousExtensions.some((extension) =>
+            pathname.endsWith(extension)
+        )
+    ) {
         add(
             25,
             "URL points to a potentially executable or installable file"
         );
     }
 
-    // ---------------------------------------------------------
-    // 12. Urgency / reward language
-    // These are weak alone. They become meaningful with auth signals.
-    // ---------------------------------------------------------
+    // 13. Urgency / reward language
     const urgencyTerms = [
         "urgent",
         "immediately",
         "expire",
+        "expired",
         "suspended",
         "limited",
         "claim",
         "reward",
         "bonus",
-        "free"
+        "free",
+        "alert"
     ];
 
     const urgencyFound = urgencyTerms.some((term) =>
@@ -331,14 +369,12 @@ function analyzeURL(inputURL) {
 
     if (urgencyFound && hasAuthenticationSignal) {
         add(
-            10,
+            12,
             "Urgency or reward language is combined with authentication-related signals"
         );
     }
 
-    // ---------------------------------------------------------
-    // 13. Strong correlated phishing pattern
-    // ---------------------------------------------------------
+    // 14. Strong correlated phishing patterns
     const strongCredentialPattern =
         multipleAuthenticationSignals &&
         hasCredentialSignal &&
@@ -346,21 +382,80 @@ function analyzeURL(inputURL) {
 
     if (strongCredentialPattern) {
         add(
-            15,
-            "Multiple correlated authentication and credential signals form a stronger phishing pattern"
+            18,
+            "Multiple correlated authentication and credential signals form a strong phishing pattern"
         );
     }
 
-    // ---------------------------------------------------------
-    // 14. Final deterministic score
-    // ---------------------------------------------------------
+    // 15. Additional strong combinations
+    if (
+        isRawIP &&
+        hasAuthenticationSignal &&
+        hasCredentialSignal
+    ) {
+        add(
+            15,
+            "IP-hosted destination is combined with authentication and credential signals"
+        );
+    }
+
+    if (
+        impersonatedBrands.length > 0 &&
+        hasAuthenticationSignal
+    ) {
+        add(
+            15,
+            "Brand impersonation is combined with account or login activity"
+        );
+    }
+
+    if (
+        impersonatedBrands.length > 0 &&
+        hasCredentialSignal
+    ) {
+        add(
+            15,
+            "Brand impersonation is combined with credential-related content"
+        );
+    }
+
+    // Generic financial / wallet deception is also strong when the
+    // hostname and path jointly request authentication or credentials.
+    const financialTerms = [
+        "bank",
+        "banking",
+        "payment",
+        "wallet",
+        "crypto",
+        "bitcoin",
+        "card"
+    ];
+
+    const financialSignal = financialTerms.some((term) =>
+        hostname.includes(term)
+    );
+
+    if (
+        financialSignal &&
+        hasAuthenticationSignal &&
+        hasCredentialSignal
+    ) {
+        add(
+            20,
+            "Financial or wallet-related hostname is combined with authentication and credential signals"
+        );
+    }
+
+    // 16. Final deterministic score
     score = Math.min(Math.max(Math.round(score), 0), 100);
 
     let level = "LOW";
 
-    if (score > 60) {
+    if (score >= 86) {
+        level = "CRITICAL";
+    } else if (score >= 61) {
         level = "HIGH";
-    } else if (score > 30) {
+    } else if (score >= 31) {
         level = "MEDIUM";
     }
 
@@ -372,7 +467,11 @@ function analyzeURL(inputURL) {
         hasStrongEvidence:
             score >= 25 ||
             strongCredentialPattern ||
-            dangerousExtensions.some((extension) => pathname.endsWith(extension))
+            impersonatedBrands.length > 0 ||
+            (isRawIP && hasCredentialSignal) ||
+            dangerousExtensions.some((extension) =>
+                pathname.endsWith(extension)
+            )
     };
 }
 
@@ -774,17 +873,21 @@ app.post(
 
             let finalLevel;
 
-            if (finalScore <= 30) {
+            if (finalScore >= 86) {
 
-                finalLevel = "LOW";
+                finalLevel = "CRITICAL";
 
-            } else if (finalScore <= 60) {
+            } else if (finalScore >= 61) {
+
+                finalLevel = "HIGH";
+
+            } else if (finalScore >= 31) {
 
                 finalLevel = "MEDIUM";
 
             } else {
 
-                finalLevel = "HIGH";
+                finalLevel = "LOW";
 
             }
 

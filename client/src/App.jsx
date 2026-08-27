@@ -124,8 +124,9 @@ const getScanLevel = (scan) => {
     scan?.result?.riskScore;
 
   if (typeof score === "number") {
-    if (score >= 70) return "HIGH";
-    if (score >= 40) return "MEDIUM";
+    if (score >= 86) return "CRITICAL";
+    if (score >= 61) return "HIGH";
+    if (score >= 31) return "MEDIUM";
     return "LOW";
   }
 
@@ -2000,14 +2001,16 @@ function App() {
               {result.url}
             </small>
 
-            {/* HIGH RISK */}
+            {/* HIGH / CRITICAL RISK */}
 
-            {result.level ===
-              "HIGH" && (
+            {(result.level === "HIGH" ||
+              result.level === "CRITICAL") && (
               <div className="high-risk-warning">
 
                 <div className="high-risk-warning-title">
-                  🚨 High Risk Warning
+                  {result.level === "CRITICAL"
+                    ? "☠️ Critical Risk Warning"
+                    : "🚨 High Risk Warning"}
                 </div>
 
                 <p>
