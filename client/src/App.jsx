@@ -22,7 +22,7 @@ import { saveScan } from "./scanService";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL ||
-  "https://linkshield-fofk.onrender.com";
+  "https://linkshield-ub5b.onrender.com";
 
 /* =========================================================
    HELPERS
@@ -546,19 +546,36 @@ function App() {
     setPreviewError("");
 
     try {
-      const response = await fetch(
-        `${API_BASE}/api/interactive-preview`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            url: result.url,
-          }),
+      const controller = new AbortController();
+      const previewTimeout = setTimeout(() => controller.abort(), 12000);
+
+      let response;
+
+      try {
+        response = await fetch(
+          `${API_BASE}/api/interactive-preview`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              url: result.url,
+            }),
+            signal: controller.signal,
+          }
+        );
+      } catch (fetchError) {
+        if (fetchError.name === "AbortError") {
+          throw new Error(
+            "Preview timed out. This website may use Cloudflare or another bot-protection service."
+          );
         }
-      );
+        throw fetchError;
+      } finally {
+        clearTimeout(previewTimeout);
+      }
 
       const data =
         await response.json();

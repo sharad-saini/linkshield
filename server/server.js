@@ -1207,9 +1207,21 @@ app.post(
         try {
 
             const preview =
-                await getInteractivePreview(
-                    validation.url
-                );
+                await Promise.race([
+                    getInteractivePreview(
+                        validation.url
+                    ),
+                    new Promise((_, reject) =>
+                        setTimeout(
+                            () => reject(
+                                new Error(
+                                    "Preview timed out after 10 seconds. The destination may use bot protection or may be too slow to render."
+                                )
+                            ),
+                            10000
+                        )
+                    )
+                ]);
 
 
             if (

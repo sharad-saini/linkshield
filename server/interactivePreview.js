@@ -1,454 +1,228 @@
+const dns = require("dns").promises;
+const ipaddr = require("ipaddr.js");
 const { chromium } = require("playwright");
+const cheerio = require("cheerio");
 
-const { validatePreviewURL } = require("./previewSecurity");
+const NAV_TIMEOUT = 8000;
+const TOTAL_TIMEOUT = 10000;
 
-function normalizeUrl(input) {
-    let value = String(input || "").trim();
-
-    if (!value) {
-        throw new Error("URL is required");
+function isBlockedIP(address) {
+    try {
+        const parsed = ipaddr.parse(address);
+        return [
+            "private",
+            "loopback",
+            "linkLocal",
+            "uniqueLocal",
+            "carrierGradeNat",
+            "unspecified",
+            "reserved",
+            "broadcast",
+            "multicast"
+        ].includes(parsed.range());
+    } catch {
+        return true;
     }
-
-    // Allow users to enter:
-    // youtube.com
-    // www.youtube.com
-    // youtube.com/watch?v=test
-    // https://youtube.com
-    // http://example.com
-    if (!/^https?:\/\//i.test(value)) {
-        value = `https://${value}`;
-    }
-
-    return value;
 }
 
-async function getInteractivePreview(inputUrl) {
+async function validateTarget(targetUrl) {
+    const parsed = new URL(targetUrl);
 
-    let browser;
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+        throw new Error("Only HTTP and HTTPS URLs are allowed");
+    }
 
-    try {
+    const hostname = parsed.hostname.toLowerCase();
 
-        // ==========================================
-        // NORMALIZE USER INPUT
-        // ==========================================
+    if (
+        hostname === "localhost" ||
+        hostname.endsWith(".localhost") ||
+        hostname.endsWith(".local") ||
+        hostname === "metadata.google.internal" ||
+        hostname === "metadata.google.com" ||
+        hostname === "host.docker.internal"
+    ) {
+        throw new Error("Local or internal destinations are not allowed");
+    }
 
-        const targetUrl = normalizeUrl(inputUrl);
+    if (ipaddr.isValid(hostname)) {
+        if (isBlockedIP(hostname)) {
+            throw new Error("Private or restricted IP addresses cannot be previewed");
+        }
+        return parsed;
+    }
 
-        // ==========================================
-        // SECURITY VALIDATION
-        // ==========================================
+    const records = await dns.lookup(hostname, { all: true });
 
-        const validation =
-            await validatePreviewURL(targetUrl);
+    if (!records.length) {
+        throw new Error("Unable to resolve website");
+    }
 
-        if (!validation.allowed) {
+    for (const record of records) {
+        if (isBlockedIP(record.address)) {
+            throw new Error("Website resolves to a private or restricted network");
+        }
+    }
 
-            return {
-                success: false,
-                message: validation.reason
-            };
+    return parsed;
+}
 
+function sanitizeHTML(html, baseURL) {
+    const $ = cheerio.load(html, { decodeEntities: false });
+
+    $("script, noscript, iframe, frame, frameset, object, embed, applet, portal").remove();
+    $("video, audio, source, track").remove();
+    $("form").each((_, el) => {
+        $(el).replaceWith(
+            '<div style="padding:16px;border:1px solid #f59e0b;background:#fff7ed;color:#7c2d12;border-radius:10px;font:14px system-ui">🛡️ Form blocked by LinkShield Protected Preview</div>'
+        );
+    });
+
+    $("meta").each((_, el) => {
+        const httpEquiv = ($(el).attr("http-equiv") || "").toLowerCase();
+        if (httpEquiv === "refresh") $(el).remove();
+    });
+
+    $("base").remove();
+
+    $("*").each((_, el) => {
+        const attrs = el.attribs || {};
+
+        for (const name of Object.keys(attrs)) {
+            if (/^on/i.test(name)) {
+                $(el).removeAttr(name);
+            }
         }
 
-        const safeURL =
-            validation.url || targetUrl;
+        for (const name of ["href", "src", "action", "formaction", "poster"]) {
+            const value = $(el).attr(name);
+            if (!value) continue;
 
-        // ==========================================
-        // LAUNCH ISOLATED BROWSER
-        // ==========================================
+            try {
+                const absolute = new URL(value, baseURL).href;
+                if (name === "action" || name === "formaction") {
+                    $(el).removeAttr(name);
+                } else {
+                    $(el).attr(name, absolute);
+                }
+            } catch {
+                $(el).removeAttr(name);
+            }
+        }
+
+        $(el).removeAttr("target");
+    });
+
+    $("a").each((_, el) => {
+        $(el).attr("href", "#");
+        $(el).attr("data-linkshield-blocked", "true");
+    });
+
+    $("head").prepend(`
+        <style>
+            html,body{margin:0;padding:0;background:#fff;color:#111;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+            a[data-linkshield-blocked]{cursor:not-allowed}
+            img{max-width:100%;height:auto}
+        </style>
+    `);
+
+    return $.html();
+}
+
+async function getInteractivePreview(targetUrl) {
+    let browser;
+    let timeoutId;
+
+    try {
+        const parsed = await validateTarget(targetUrl);
 
         browser = await chromium.launch({
-
             headless: true,
-
             args: [
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",
                 "--disable-gpu"
             ]
-
         });
 
-        const context =
-            await browser.newContext({
+        const context = await browser.newContext({
+            ignoreHTTPSErrors: false,
+            javaScriptEnabled: true,
+            viewport: { width: 1366, height: 768 },
+            userAgent: "LinkShield-ProtectedPreview/1.0"
+        });
 
-                javaScriptEnabled: true,
-
-                ignoreHTTPSErrors: false,
-
-                viewport: {
-                    width: 1440,
-                    height: 900
-                },
-
-                userAgent:
-                    "LinkShield-SecureBrowser/1.0"
-
-            });
-
-        const page =
-            await context.newPage();
-
-        // ==========================================
-        // CONTROL ALL NETWORK REQUESTS
-        // ==========================================
+        const page = await context.newPage();
+        page.setDefaultNavigationTimeout(NAV_TIMEOUT);
+        page.setDefaultTimeout(NAV_TIMEOUT);
 
         await page.route("**/*", async (route) => {
+            const request = route.request();
+            const type = request.resourceType();
+            const url = request.url();
 
-            try {
-
-                const request =
-                    route.request();
-
-                const requestURL =
-                    new URL(request.url());
-
-                // Only HTTP / HTTPS
-                if (
-                    !["http:", "https:"].includes(
-                        requestURL.protocol
-                    )
-                ) {
-
-                    return route.abort();
-
-                }
-
-                // Validate every destination
-                const check =
-                    await validatePreviewURL(
-                        requestURL.toString()
-                    );
-
-                if (!check.allowed) {
-
-                    console.log(
-                        "🛡️ Blocked preview request:",
-                        requestURL.hostname,
-                        check.reason
-                    );
-
-                    return route.abort();
-
-                }
-
-                await route.continue();
-
-            } catch (error) {
-
-                console.log(
-                    "🛡️ Blocked unsafe request:",
-                    error.message
-                );
-
+            if (["font", "media"].includes(type)) {
                 return route.abort();
-
             }
 
+            if (
+                /google-analytics|googletagmanager|doubleclick|facebook\.net|connect\.facebook|hotjar|clarity\.ms/i.test(url)
+            ) {
+                return route.abort();
+            }
+
+            return route.continue();
         });
 
-        // ==========================================
-        // LOAD TARGET WEBSITE
-        // ==========================================
+        timeoutId = setTimeout(() => {
+            page.close().catch(() => {});
+        }, TOTAL_TIMEOUT);
 
-        await page.goto(safeURL, {
-
-            waitUntil: "domcontentloaded",
-
-            timeout: 20000
-
-        });
-
-        // Give modern JS applications time to render
-        await page.waitForTimeout(3000);
-
-        // Some sites keep connections open permanently.
-        // Network idle is therefore optional.
         try {
-
-            await page.waitForLoadState(
-                "networkidle",
-                {
-                    timeout: 8000
-                }
-            );
-
-        } catch {}
-
-        // ==========================================
-        // PREPARE IMAGES
-        // ==========================================
-
-        await page.evaluate(() => {
-
-            document
-                .querySelectorAll("img")
-                .forEach((img) => {
-
-                    try {
-
-                        img.loading = "eager";
-
-                        const src =
-                            img.getAttribute("src");
-
-                        if (src) {
-
-                            img.src =
-                                new URL(
-                                    src,
-                                    document.baseURI
-                                ).href;
-
-                        }
-
-                        img.removeAttribute(
-                            "srcset"
-                        );
-
-                    } catch {}
-
-                });
-
-        });
-
-        // Let images finish
-        await page.waitForTimeout(1500);
-
-        // ==========================================
-        // ADD LINKSHIELD SECURITY NOTICE
-        // ==========================================
-
-        await page.evaluate(() => {
-
-            if (!document.body) {
-                return;
-            }
-
-            const banner =
-                document.createElement("div");
-
-            const title =
-                document.createElement("div");
-
-            const message =
-                document.createElement("div");
-
-            title.textContent =
-                "🛡️ LinkShield Protected Preview";
-
-            message.textContent =
-                "This page was rendered inside LinkShield's " +
-                "isolated browser. The preview shown here " +
-                "is static and cannot submit forms or " +
-                "navigate the original website.";
-
-            title.style.cssText = `
-                font-family: system-ui, sans-serif;
-                font-size: 16px;
-                font-weight: 700;
-                color: #ffb13b;
-                margin-bottom: 5px;
-            `;
-
-            message.style.cssText = `
-                font-family: system-ui, sans-serif;
-                font-size: 12px;
-                line-height: 1.4;
-                color: #d9e4ee;
-            `;
-
-            banner.appendChild(title);
-            banner.appendChild(message);
-
-            banner.style.cssText = `
-                position: sticky;
-                top: 0;
-                z-index: 2147483647;
-                padding: 14px 20px;
-                background: #101c2c;
-                border-bottom: 2px solid #ffb13b;
-                text-align: center;
-                box-sizing: border-box;
-            `;
-
-            document.body.prepend(banner);
-
-        });
-
-        // ==========================================
-        // CAPTURE FULL RENDERED PAGE
-        // ==========================================
-
-        const screenshot =
-            await page.screenshot({
-
-                type: "png",
-
-                fullPage: true,
-
-                animations: "disabled"
-
+            await page.goto(parsed.href, {
+                waitUntil: "domcontentloaded",
+                timeout: NAV_TIMEOUT
             });
-
-        const imageBase64 =
-            screenshot.toString("base64");
-
-        // ==========================================
-        // GET TITLE
-        // ==========================================
-
-        const title =
-            await page.title();
-
-        // ==========================================
-        // STATIC SAFE HTML
-        // ==========================================
-
-        /*
-         * Important:
-         *
-         * We do NOT return the original HTML.
-         * We return a static image of the fully
-         * rendered page.
-         *
-         * Therefore:
-         *
-         * - Target JavaScript does not run in React.
-         * - Forms cannot be submitted.
-         * - Target links cannot be clicked.
-         * - Target scripts cannot access the user.
-         */
-
-        const safeHTML = `
-<!DOCTYPE html>
-
-<html>
-
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>
-        LinkShield Protected Preview
-    </title>
-
-    <style>
-
-        * {
-            box-sizing: border-box;
+        } catch (error) {
+            if (!page.isClosed()) {
+                const currentURL = page.url();
+                if (!currentURL || currentURL === "about:blank") {
+                    throw new Error(
+                        /timeout/i.test(error.message)
+                            ? "Website took too long to respond"
+                            : "Website could not be loaded"
+                    );
+                }
+            }
         }
 
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            background: #ffffff;
+        if (page.isClosed()) {
+            throw new Error("Preview timed out while loading the website");
         }
 
-        body {
-            overflow-x: hidden;
-        }
+        await page.waitForTimeout(700).catch(() => {});
 
-        .preview-image {
-            display: block;
-            width: 100%;
-            height: auto;
-        }
-
-    </style>
-
-</head>
-
-<body>
-
-    <img
-        class="preview-image"
-        src="data:image/png;base64,${imageBase64}"
-        alt="LinkShield protected website preview"
-        draggable="false"
-    >
-
-</body>
-
-</html>
-        `;
-
-        // ==========================================
-        // CLOSE BROWSER
-        // ==========================================
-
-        await browser.close();
-
-        browser = null;
-
-        // ==========================================
-        // RETURN
-        // ==========================================
+        const title = await page.title().catch(() => parsed.hostname);
+        const html = await page.content();
+        const sanitized = sanitizeHTML(html, page.url() || parsed.href);
 
         return {
-
             success: true,
-
-            title:
-                title ||
-                "LinkShield Interactive Preview",
-
-            url: safeURL,
-
-            html: safeHTML,
-
-            previewType:
-                "static-rendered"
-
+            title: title || parsed.hostname,
+            html: sanitized
         };
-
     } catch (error) {
-
-        console.error(
-            "========================================"
-        );
-
-        console.error(
-            "INTERACTIVE PREVIEW ERROR"
-        );
-
-        console.error(error);
-
-        console.error(
-            "========================================"
-        );
-
-        if (browser) {
-
-            try {
-                await browser.close();
-            } catch {}
-
-        }
+        console.error("Interactive preview generation failed:", error.message);
 
         return {
-
             success: false,
-
-            message:
-                error.message ||
-                "Unable to render protected preview."
-
+            message: error.message || "Unable to generate interactive preview"
         };
-
+    } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+        if (browser) await browser.close().catch(() => {});
     }
-
 }
 
-module.exports = {
-
-    getInteractivePreview
-
-};
+module.exports = { getInteractivePreview };
