@@ -21,7 +21,6 @@ const {
     getSafePreview
 } = require("./safePreview");
 
-
 const app = express();
 
 
@@ -33,7 +32,10 @@ app.use(
     cors({
         origin: "https://linkshield-kappa.vercel.app",
         methods: ["GET", "POST", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"]
+        allowedHeaders: [
+            "Content-Type",
+            "Authorization"
+        ]
     })
 );
 
@@ -76,82 +78,192 @@ function normalizeURL(inputURL) {
 // =========================================================
 
 function analyzeURL(inputURL) {
-    const normalizedURL = normalizeURL(inputURL);
 
-    if (!normalizedURL) {
-        return {
-            riskScore: 100,
-            level: "CRITICAL",
-            reasons: ["Invalid or empty URL"],
-            evidenceCount: 1,
-            hasStrongEvidence: true
-        };
-    }
+    let score = 0;
+
+    const reasons = [];
+
+    const signals = [];
+
+    const normalizedURL =
+        normalizeURL(inputURL);
 
     let url;
 
     try {
+
         url = new URL(normalizedURL);
+
     } catch {
+
         return {
             riskScore: 100,
-            level: "CRITICAL",
-            reasons: ["Invalid URL format"],
-            evidenceCount: 1,
-            hasStrongEvidence: true
+            level: "HIGH",
+            reasons: [
+                "Invalid URL format"
+            ],
+            signals: [
+                "invalid_url"
+            ]
         };
+
     }
 
-    const hostname = url.hostname.toLowerCase();
-    const pathname = url.pathname.toLowerCase();
-    const search = url.search.toLowerCase();
-    const fullURL = normalizedURL.toLowerCase();
-    const reasons = [];
-    let score = 0;
 
-    const add = (points, reason) => {
-        score += points;
-        reasons.push(reason);
-    };
+    const hostname =
+        url.hostname.toLowerCase();
 
-    // 1. Transport
+    const pathname =
+        url.pathname.toLowerCase();
+
+    const fullURL =
+        normalizedURL.toLowerCase();
+
+    const search =
+        url.search.toLowerCase();
+
+
+    // =====================================================
+    // 1. HTTP
+    // =====================================================
+
     if (url.protocol !== "https:") {
-        add(10, "Connection does not use HTTPS");
-    }
 
-    // 2. Raw IP destination
-    const ipPattern = /^(?:\d{1,3}\.){3}\d{1,3}$/;
-    const isRawIP = ipPattern.test(hostname);
+        score += 10;
 
-    if (isRawIP) {
-        add(25, "URL uses an IP address instead of a domain");
-    }
-
-    // 3. User-info / @ deception
-    if (url.username || url.password || fullURL.includes("@")) {
-        add(
-            30,
-            "URL contains user-info/@ syntax that can obscure the actual destination"
+        reasons.push(
+            "Connection does not use HTTPS"
         );
+
+        signals.push(
+            "http_connection"
+        );
+
     }
 
-    // 4. Punycode
-    if (hostname.includes("xn--")) {
-        add(20, "Hostname contains a punycode label");
+
+    // =====================================================
+    // 2. RAW IP ADDRESS
+    // =====================================================
+
+    const ipPattern =
+        /^(?:\d{1,3}\.){3}\d{1,3}$/;
+
+    if (ipPattern.test(hostname)) {
+
+        score += 25;
+
+        reasons.push(
+            "URL uses an IP address instead of a domain"
+        );
+
+        signals.push(
+            "ip_host"
+        );
+
     }
 
-    // 5. Excessive subdomains
-    const hostnameParts = hostname.split(".").filter(Boolean);
-    const subdomainCount = Math.max(0, hostnameParts.length - 2);
 
-    if (subdomainCount >= 4) {
-        add(10, "URL contains an unusually deep subdomain structure");
-    } else if (subdomainCount >= 3) {
-        add(5, "URL contains multiple subdomain levels");
+    // =====================================================
+    // 3. @ OBFUSCATION
+    // =====================================================
+
+    if (
+        normalizedURL.includes("@")
+    ) {
+
+        score += 30;
+
+        reasons.push(
+            "URL contains @ symbol, which can obscure the actual destination"
+        );
+
+        signals.push(
+            "at_symbol"
+        );
+
     }
 
-    // 6. URL shorteners
-    const shorteners = new Set([
+
+    // =====================================================
+    // 4. VERY LONG URL
+    // =====================================================
+
+    if (
+        normalizedURL.length > 150
+    ) {
+
+        score += 8;
+
+        reasons.push(
+            "URL is unusually long"
+        );
+
+        signals.push(
+            "long_url"
+        );
+
+    }
+
+
+    // =====================================================
+    // 5. VERY DEEP SUBDOMAINS
+    // =====================================================
+
+    const hostnameParts =
+        hostname
+            .split(".")
+            .filter(Boolean);
+
+    const subdomainCount =
+        Math.max(
+            0,
+            hostnameParts.length - 2
+        );
+
+    if (
+        subdomainCount >= 4
+    ) {
+
+        score += 10;
+
+        reasons.push(
+            "URL contains an unusually deep subdomain structure"
+        );
+
+        signals.push(
+            "deep_subdomains"
+        );
+
+    }
+
+
+    // =====================================================
+    // 6. PUNYCODE
+    // =====================================================
+
+    if (
+        hostname.includes("xn--")
+    ) {
+
+        score += 15;
+
+        reasons.push(
+            "Hostname contains a punycode/internationalized label"
+        );
+
+        signals.push(
+            "punycode"
+        );
+
+    }
+
+
+    // =====================================================
+    // 7. URL SHORTENERS
+    // =====================================================
+
+    const shorteners = [
         "bit.ly",
         "tinyurl.com",
         "t.co",
@@ -159,25 +271,135 @@ function analyzeURL(inputURL) {
         "cutt.ly",
         "ow.ly",
         "shorturl.at",
-        "rebrand.ly",
-        "rb.gy"
-    ]);
+        "rb.gy",
+        "tiny.cc",
+        "lnkd.in"
+    ];
 
-    if (shorteners.has(hostname)) {
-        add(18, "Uses a URL shortening service that hides the final destination");
+    if (
+        shorteners.includes(hostname)
+    ) {
+
+        score += 18;
+
+        reasons.push(
+            "Uses a URL shortening service"
+        );
+
+        signals.push(
+            "url_shortener"
+        );
+
     }
 
-    // 7. URL complexity / encoding
-    if (normalizedURL.length > 220) {
-        add(5, "URL is unusually long");
+
+    // =====================================================
+    // 8. SECURITY / ACCOUNT KEYWORDS
+    // =====================================================
+
+    const suspiciousWords = [
+
+        "login",
+        "signin",
+        "sign-in",
+        "verify",
+        "verification",
+        "password",
+        "credential",
+        "account",
+        "secure",
+        "security",
+        "update",
+        "confirm",
+        "confirmation",
+        "reset",
+        "recover",
+        "wallet",
+        "payment",
+        "billing",
+        "claim",
+        "bonus",
+        "reward",
+        "free",
+        "suspended",
+        "unlock"
+
+    ];
+
+    const foundWords =
+        suspiciousWords.filter(
+            word =>
+                fullURL.includes(word)
+        );
+
+    if (
+        foundWords.length > 0
+    ) {
+
+        score += Math.min(
+            foundWords.length * 2,
+            8
+        );
+
+        reasons.push(
+            `Contains security-sensitive keyword(s): ${foundWords.join(", ")}`
+        );
+
+        signals.push(
+            "security_keywords"
+        );
+
     }
 
-    if ((normalizedURL.match(/%[0-9a-f]{2}/gi) || []).length >= 8) {
-        add(8, "URL contains unusually heavy percent-encoding");
+
+    // =====================================================
+    // 9. AUTHENTICATION COMBINATION
+    // =====================================================
+
+    const authenticationTerms = [
+
+        "login",
+        "signin",
+        "sign-in",
+        "verify",
+        "verification",
+        "account",
+        "confirm",
+        "confirmation",
+        "reset",
+        "recover"
+
+    ];
+
+    const authenticationMatches =
+        authenticationTerms.filter(
+            term =>
+                fullURL.includes(term)
+        );
+
+    if (
+        authenticationMatches.length >= 2
+    ) {
+
+        score += 10;
+
+        reasons.push(
+            "Multiple authentication or account-verification indicators are present"
+        );
+
+        signals.push(
+            "multiple_auth_signals"
+        );
+
     }
 
-    // 8. Credential indicators
+
+    // =====================================================
+    // 10. CREDENTIAL INDICATORS
+    // =====================================================
+
     const credentialTerms = [
+
         "password",
         "passwd",
         "credential",
@@ -186,23 +408,40 @@ function analyzeURL(inputURL) {
         "otp",
         "pin",
         "token",
-        "wallet"
+        "apikey",
+        "api_key"
+
     ];
 
-    const credentialMatches = credentialTerms.filter((term) =>
-        fullURL.includes(term)
-    );
+    const credentialMatches =
+        credentialTerms.filter(
+            term =>
+                fullURL.includes(term)
+        );
 
-    const hasCredentialSignal = credentialMatches.length > 0;
+    if (
+        credentialMatches.length > 0
+    ) {
 
-    if (credentialMatches.length >= 2) {
-        add(18, "URL contains multiple credential-related indicators");
-    } else if (hasCredentialSignal) {
-        add(12, "URL contains a credential-related indicator");
+        score += 10;
+
+        reasons.push(
+            "URL contains credential-related indicators"
+        );
+
+        signals.push(
+            "credential_terms"
+        );
+
     }
 
-    // 9. Sensitive query parameters
-    const sensitiveParameters = new Set([
+
+    // =====================================================
+    // 11. SENSITIVE QUERY PARAMETERS
+    // =====================================================
+
+    const sensitiveParameters = [
+
         "password",
         "passwd",
         "credential",
@@ -213,118 +452,196 @@ function analyzeURL(inputURL) {
         "secret",
         "apikey",
         "api_key",
-        "wallet"
-    ]);
+        "access_token",
+        "auth"
 
-    let sensitiveParameterFound = false;
-
-    for (const [key] of url.searchParams.entries()) {
-        if (sensitiveParameters.has(key.toLowerCase())) {
-            sensitiveParameterFound = true;
-            break;
-        }
-    }
-
-    if (sensitiveParameterFound) {
-        add(15, "URL contains a sensitive credential-related parameter");
-    }
-
-    // 10. Authentication / verification signals
-    const authenticationTerms = [
-        "login",
-        "signin",
-        "sign-in",
-        "verify",
-        "verification",
-        "account",
-        "confirm",
-        "confirmation",
-        "reset",
-        "recover",
-        "security"
     ];
 
-    const authenticationMatches = authenticationTerms.filter((term) =>
-        fullURL.includes(term)
-    );
+    let sensitiveParameterFound =
+        false;
 
-    const hasAuthenticationSignal = authenticationMatches.length > 0;
-    const multipleAuthenticationSignals =
-        authenticationMatches.length >= 2;
+    let sensitiveParameterName =
+        null;
 
-    if (authenticationMatches.length >= 4) {
-        add(
-            12,
-            "URL contains many authentication or account-verification indicators"
-        );
-    } else if (multipleAuthenticationSignals) {
-        add(
-            8,
-            "Multiple authentication or account-verification indicators are present"
-        );
+    for (
+        const parameter
+        of sensitiveParameters
+    ) {
+
+        if (
+            url.searchParams.has(parameter)
+        ) {
+
+            sensitiveParameterFound =
+                true;
+
+            sensitiveParameterName =
+                parameter;
+
+            break;
+
+        }
+
     }
+
+    if (
+        sensitiveParameterFound
+    ) {
+
+        score += 15;
+
+        reasons.push(
+            `URL contains a sensitive parameter: ${sensitiveParameterName}`
+        );
+
+        signals.push(
+            "sensitive_parameter"
+        );
+
+    }
+
+
+    // =====================================================
+    // 12. MANY QUERY PARAMETERS
+    // =====================================================
+
+    const parameterCount =
+        Array.from(
+            url.searchParams.keys()
+        ).length;
+
+    if (
+        parameterCount >= 8
+    ) {
+
+        score += 6;
+
+        reasons.push(
+            "URL contains an unusually large number of query parameters"
+        );
+
+        signals.push(
+            "many_parameters"
+        );
+
+    }
+
+
+    // =====================================================
+    // 13. DECEPTIVE HOSTNAME
+    // =====================================================
+
+    const hostnameSecurityTerms = [
+
+        "login",
+        "signin",
+        "verify",
+        "verification",
+        "security",
+        "secure",
+        "account",
+        "support",
+        "update",
+        "confirm",
+        "wallet",
+        "payment",
+        "billing"
+
+    ];
+
+    const hostnameSecurityMatches =
+        hostnameSecurityTerms.filter(
+            term =>
+                hostname.includes(term)
+        );
+
+    if (
+        hostnameSecurityMatches.length >= 2
+    ) {
+
+        score += 12;
+
+        reasons.push(
+            "Hostname contains multiple security or account-related terms"
+        );
+
+        signals.push(
+            "deceptive_hostname"
+        );
+
+    }
+
+
+    // =====================================================
+    // 14. SUSPICIOUS AUTHENTICATION PATH
+    // =====================================================
 
     const credentialPath =
-        /\/(login|signin|sign-in|verify|verification|account|security|password|reset|recover)(?:[/?#]|$)/i;
+        /\/(login|signin|sign-in|verify|verification|account|security|password|reset|recover)(\/|$)/i;
 
-    const credentialPathFound = credentialPath.test(pathname);
+    if (
+        credentialPath.test(pathname) &&
+        credentialMatches.length > 0
+    ) {
 
-    if (credentialPathFound && hasCredentialSignal) {
-        add(
-            12,
+        score += 10;
+
+        reasons.push(
             "Authentication-related path is combined with credential indicators"
         );
-    }
 
-    // 11. Brand impersonation
-    // A brand keyword in a hostname is high-signal when the actual
-    // registrable domain is not the brand's legitimate domain.
-    const brandDomains = {
-        paypal: ["paypal.com"],
-        microsoft: ["microsoft.com", "live.com", "office.com", "outlook.com"],
-        apple: ["apple.com", "icloud.com"],
-        amazon: ["amazon.com", "amazon.in"],
-        google: ["google.com"],
-        facebook: ["facebook.com", "fb.com"],
-        instagram: ["instagram.com"],
-        netflix: ["netflix.com"],
-        linkedin: ["linkedin.com"],
-        github: ["github.com"],
-        binance: ["binance.com"],
-        coinbase: ["coinbase.com"]
-    };
-
-    const registrableDomain = hostnameParts.length >= 2
-        ? hostnameParts.slice(-2).join(".")
-        : hostname;
-
-    const brandMatches = Object.entries(brandDomains)
-        .filter(([brand]) => {
-            const brandPattern = new RegExp(
-                `(^|[-._])${brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([-. _]|$)`,
-                "i"
-            );
-            return brandPattern.test(hostname);
-        })
-        .map(([brand]) => brand);
-
-    const impersonatedBrands = brandMatches.filter((brand) =>
-        !brandDomains[brand].some(
-            (domain) =>
-                hostname === domain ||
-                hostname.endsWith(`.${domain}`)
-        )
-    );
-
-    if (impersonatedBrands.length > 0) {
-        add(
-            25,
-            `Possible brand impersonation detected: ${impersonatedBrands.join(", ")}`
+        signals.push(
+            "credential_path_combination"
         );
+
     }
 
-    // 12. Dangerous downloads
+
+    // =====================================================
+    // 15. HIGH-RISK CREDENTIAL COMBINATION
+    // =====================================================
+
+    const hasAuthenticationSignal =
+        authenticationMatches.length >= 2;
+
+    const hasCredentialSignal =
+        credentialMatches.length > 0;
+
+    const hasSensitiveParameter =
+        sensitiveParameterFound;
+
+    const hasDeceptiveHostname =
+        hostnameSecurityMatches.length >= 2;
+
+
+    if (
+        hasAuthenticationSignal &&
+        hasCredentialSignal &&
+        (
+            hasSensitiveParameter ||
+            hasDeceptiveHostname
+        )
+    ) {
+
+        score += 18;
+
+        reasons.push(
+            "Multiple correlated credential and verification signals form a high-risk pattern"
+        );
+
+        signals.push(
+            "high_risk_credential_combination"
+        );
+
+    }
+
+
+    // =====================================================
+    // 16. EXECUTABLE DOWNLOAD
+    // =====================================================
+
     const dangerousExtensions = [
+
         ".exe",
         ".scr",
         ".msi",
@@ -334,152 +651,196 @@ function analyzeURL(inputURL) {
         ".apk",
         ".jar",
         ".dmg",
-        ".pkg"
+        ".vbs",
+        ".hta",
+        ".iso"
+
     ];
 
+    const hasDangerousDownload =
+        dangerousExtensions.some(
+            extension =>
+                pathname.endsWith(extension)
+        );
+
     if (
-        dangerousExtensions.some((extension) =>
-            pathname.endsWith(extension)
-        )
+        hasDangerousDownload
     ) {
-        add(
-            25,
+
+        score += 25;
+
+        reasons.push(
             "URL points to a potentially executable or installable file"
         );
+
+        signals.push(
+            "dangerous_download"
+        );
+
     }
 
-    // 13. Urgency / reward language
+
+    // =====================================================
+    // 17. SUSPICIOUS FILE PATH
+    // =====================================================
+
+    const suspiciousFileTerms = [
+        "payload",
+        "dropper",
+        "malware",
+        "stealer",
+        "keylogger",
+        "crack",
+        "loader"
+    ];
+
+    const suspiciousFileFound =
+        suspiciousFileTerms.some(
+            term =>
+                pathname.includes(term)
+        );
+
+    if (
+        suspiciousFileFound
+    ) {
+
+        score += 18;
+
+        reasons.push(
+            "URL path contains suspicious file or malware-related terminology"
+        );
+
+        signals.push(
+            "suspicious_file_path"
+        );
+
+    }
+
+
+    // =====================================================
+    // 18. URGENCY / REWARD + AUTHENTICATION
+    // =====================================================
+
     const urgencyTerms = [
+
         "urgent",
         "immediately",
         "expire",
-        "expired",
         "suspended",
         "limited",
         "claim",
         "reward",
         "bonus",
         "free",
-        "alert"
+        "unlock"
+
     ];
 
-    const urgencyFound = urgencyTerms.some((term) =>
-        fullURL.includes(term)
-    );
-
-    if (urgencyFound && hasAuthenticationSignal) {
-        add(
-            12,
-            "Urgency or reward language is combined with authentication-related signals"
+    const urgencyFound =
+        urgencyTerms.some(
+            term =>
+                fullURL.includes(term)
         );
-    }
-
-    // 14. Strong correlated phishing patterns
-    const strongCredentialPattern =
-        multipleAuthenticationSignals &&
-        hasCredentialSignal &&
-        (sensitiveParameterFound || credentialPathFound);
-
-    if (strongCredentialPattern) {
-        add(
-            18,
-            "Multiple correlated authentication and credential signals form a strong phishing pattern"
-        );
-    }
-
-    // 15. Additional strong combinations
-    if (
-        isRawIP &&
-        hasAuthenticationSignal &&
-        hasCredentialSignal
-    ) {
-        add(
-            15,
-            "IP-hosted destination is combined with authentication and credential signals"
-        );
-    }
 
     if (
-        impersonatedBrands.length > 0 &&
-        hasAuthenticationSignal
+        urgencyFound &&
+        (
+            hasAuthenticationSignal ||
+            hasCredentialSignal
+        )
     ) {
-        add(
-            15,
-            "Brand impersonation is combined with account or login activity"
+
+        score += 15;
+
+        reasons.push(
+            "Urgency, reward, or account-pressure language is combined with authentication or credential indicators"
         );
+
+        signals.push(
+            "urgency_auth_combination"
+        );
+
     }
+
+
+    // =====================================================
+    // 19. MULTIPLE SUSPICIOUS SIGNALS
+    // =====================================================
 
     if (
-        impersonatedBrands.length > 0 &&
-        hasCredentialSignal
+        signals.length >= 4
     ) {
-        add(
-            15,
-            "Brand impersonation is combined with credential-related content"
+
+        score += 8;
+
+        reasons.push(
+            "Several independent suspicious URL signals are present"
         );
+
+        signals.push(
+            "multiple_independent_signals"
+        );
+
     }
 
-    // Generic financial / wallet deception is also strong when the
-    // hostname and path jointly request authentication or credentials.
-    const financialTerms = [
-        "bank",
-        "banking",
-        "payment",
-        "wallet",
-        "crypto",
-        "bitcoin",
-        "card"
-    ];
 
-    const financialSignal = financialTerms.some((term) =>
-        hostname.includes(term)
-    );
+    // =====================================================
+    // SCORE
+    // =====================================================
+
+    score =
+        Math.min(
+            Math.max(
+                Math.round(score),
+                0
+            ),
+            100
+        );
+
+
+    let level;
 
     if (
-        financialSignal &&
-        hasAuthenticationSignal &&
-        hasCredentialSignal
+        score <= 30
     ) {
-        add(
-            20,
-            "Financial or wallet-related hostname is combined with authentication and credential signals"
-        );
-    }
 
-    // 16. Final deterministic score
-    score = Math.min(Math.max(Math.round(score), 0), 100);
+        level = "LOW";
 
-    let level = "LOW";
+    } else if (
+        score <= 60
+    ) {
 
-    if (score >= 86) {
-        level = "CRITICAL";
-    } else if (score >= 61) {
-        level = "HIGH";
-    } else if (score >= 31) {
         level = "MEDIUM";
+
+    } else {
+
+        level = "HIGH";
+
     }
+
 
     return {
+
         riskScore: score,
+
         level,
+
         reasons,
-        evidenceCount: reasons.length,
-        hasStrongEvidence:
-            score >= 25 ||
-            strongCredentialPattern ||
-            impersonatedBrands.length > 0 ||
-            (isRawIP && hasCredentialSignal) ||
-            dangerousExtensions.some((extension) =>
-                pathname.endsWith(extension)
-            )
+
+        signals
+
     };
+
 }
 
+
 // =========================================================
-// SAFE PREVIEW VALIDATION
+// SAFE PREVIEW URL VALIDATION
 // =========================================================
 
-function validatePreviewURL(inputURL) {
+function validatePreviewURL(
+    inputURL
+) {
 
     let parsed;
 
@@ -516,7 +877,9 @@ function validatePreviewURL(inputURL) {
         parsed.hostname.toLowerCase();
 
 
-    // BLOCK LOCALHOST
+    // =====================================================
+    // LOCALHOST
+    // =====================================================
 
     if (
         hostname === "localhost" ||
@@ -532,7 +895,9 @@ function validatePreviewURL(inputURL) {
     }
 
 
-    // BLOCK INTERNAL HOSTNAMES
+    // =====================================================
+    // INTERNAL HOSTNAMES
+    // =====================================================
 
     const blockedHostnames = [
 
@@ -555,7 +920,9 @@ function validatePreviewURL(inputURL) {
     }
 
 
-    // BLOCK PRIVATE IP RANGES
+    // =====================================================
+    // PRIVATE IP RANGES
+    // =====================================================
 
     try {
 
@@ -610,7 +977,194 @@ function validatePreviewURL(inputURL) {
 
 
 // =========================================================
-// SCAN API
+// SCORE COMBINATION
+// =========================================================
+
+function calculateFinalScore(
+    ruleResult,
+    aiResult,
+    threatIntel
+) {
+
+    const ruleScore =
+        Number(
+            ruleResult?.riskScore || 0
+        );
+
+    const aiScore =
+        Number(
+            aiResult?.riskScore || 0
+        );
+
+    const aiConfidence =
+        Number(
+            aiResult?.confidence || 0
+        );
+
+
+    // =====================================================
+    // KNOWN MALICIOUS = STRONG OVERRIDE
+    // =====================================================
+
+    if (
+        threatIntel?.knownThreat === true
+    ) {
+
+        return 95;
+
+    }
+
+
+    // =====================================================
+    // AI SCORE IS WEIGHTED BY CONFIDENCE
+    // =====================================================
+
+    let aiWeight = 0.35;
+
+    if (
+        aiConfidence >= 90
+    ) {
+
+        aiWeight = 0.45;
+
+    } else if (
+        aiConfidence >= 75
+    ) {
+
+        aiWeight = 0.40;
+
+    } else if (
+        aiConfidence >= 60
+    ) {
+
+        aiWeight = 0.30;
+
+    } else {
+
+        aiWeight = 0.20;
+
+    }
+
+
+    const ruleWeight =
+        1 - aiWeight;
+
+
+    let combinedScore =
+        (
+            ruleScore * ruleWeight
+        ) +
+        (
+            aiScore * aiWeight
+        );
+
+
+    // =====================================================
+    // STRONG OBJECTIVE EVIDENCE
+    // =====================================================
+
+    const strongSignals =
+        ruleResult?.signals || [];
+
+    const strongEvidence =
+        strongSignals.some(
+            signal =>
+                [
+                    "at_symbol",
+                    "ip_host",
+                    "dangerous_download",
+                    "sensitive_parameter",
+                    "high_risk_credential_combination",
+                    "credential_path_combination"
+                ].includes(signal)
+        );
+
+
+    if (
+        strongEvidence &&
+        aiConfidence >= 80 &&
+        aiScore >= 70
+    ) {
+
+        combinedScore += 10;
+
+    }
+
+
+    // =====================================================
+    // MULTIPLE SIGNAL + HIGH AI AGREEMENT
+    // =====================================================
+
+    if (
+        strongSignals.length >= 4 &&
+        aiConfidence >= 80 &&
+        aiScore >= 75
+    ) {
+
+        combinedScore += 8;
+
+    }
+
+
+    // =====================================================
+    // DON'T LET AI CREATE A HIGH RESULT FROM NOTHING
+    // =====================================================
+
+    if (
+        ruleScore <= 10 &&
+        aiScore >= 80 &&
+        aiConfidence >= 85
+    ) {
+
+        combinedScore =
+            Math.min(
+                combinedScore,
+                45
+            );
+
+    }
+
+
+    return Math.min(
+        Math.max(
+            Math.round(combinedScore),
+            0
+        ),
+        100
+    );
+
+}
+
+
+// =========================================================
+// FINAL LEVEL
+// =========================================================
+
+function getFinalLevel(score) {
+
+    if (
+        score <= 30
+    ) {
+
+        return "LOW";
+
+    }
+
+    if (
+        score <= 60
+    ) {
+
+        return "MEDIUM";
+
+    }
+
+    return "HIGH";
+
+}
+
+
+// =========================================================
+// URL SCAN API
 // =========================================================
 
 app.post(
@@ -646,6 +1200,7 @@ app.post(
             const normalizedURL =
                 normalizeURL(url);
 
+
             if (!normalizedURL) {
 
                 return res.status(400).json({
@@ -659,7 +1214,7 @@ app.post(
 
 
             // =================================================
-            // 2. LOCAL RULE ANALYSIS
+            // 2. LOCAL RULE ENGINE
             // =================================================
 
             const ruleResult =
@@ -669,7 +1224,7 @@ app.post(
 
 
             console.log(
-                "URL:",
+                "LINKSHIELD URL:",
                 normalizedURL
             );
 
@@ -700,6 +1255,8 @@ app.post(
                     await checkThreatIntel(
                         normalizedURL
                     );
+
+
                 if (
                     threatResult &&
                     typeof threatResult === "object"
@@ -731,19 +1288,6 @@ app.post(
                     "Threat intelligence error:",
                     error.message
                 );
-
-                // Threat intelligence failure
-                // must NOT make a URL HIGH risk.
-
-                threatIntel = {
-
-                    knownThreat: false,
-
-                    sources: [],
-
-                    threatType: null
-
-                };
 
             }
 
@@ -777,8 +1321,6 @@ app.post(
                     error.message
                 );
 
-                aiResult = null;
-
             }
 
 
@@ -787,130 +1329,42 @@ app.post(
                 aiResult
             );
 
-            console.log("FINAL DEBUG:", {
-                url: normalizedURL,
-                ruleScore: ruleResult.riskScore,
-                ruleLevel: ruleResult.level,
-                threatKnown: threatIntel.knownThreat,
-                threatSources: threatIntel.sources,
-                aiScore: aiResult?.riskScore,
-                aiClassification: aiResult?.classification,
-                aiConfidence: aiResult?.confidence
-            });
-
 
             // =================================================
             // 5. FINAL SCORE
             // =================================================
 
-            let finalScore =
-                ruleResult.riskScore;
-
-
-            // =================================================
-            // CONFIRMED THREAT INTELLIGENCE
-            // =================================================
-
-            if (
-                threatIntel.knownThreat === true
-            ) {
-
-                finalScore =
-                    Math.max(
-                        finalScore,
-                        90
-                    );
-
-            }
-
-
-            // =================================================
-            // AI SECOND OPINION
-            // =================================================
-            // AI may strengthen evidence that already exists.
-            // AI must NEVER turn a clean URL into HIGH by itself.
-
-            const aiConfidence = Number(aiResult?.confidence || 0);
-            const aiScore = Number(aiResult?.riskScore || 0);
-            const aiClassification = String(
-                aiResult?.classification || ""
-            ).toUpperCase();
-
-            const hasObjectiveEvidence =
-                ruleResult.hasStrongEvidence === true ||
-                ruleResult.evidenceCount >= 2;
-
-            if (
-                hasObjectiveEvidence &&
-                aiConfidence >= 85 &&
-                (aiClassification === "HIGH" || aiClassification === "CRITICAL") &&
-                Number.isFinite(aiScore) &&
-                aiScore > finalScore
-            ) {
-                finalScore = Math.max(
-                    finalScore,
-                    Math.min(aiScore, finalScore + 20)
+            const finalScore =
+                calculateFinalScore(
+                    ruleResult,
+                    aiResult,
+                    threatIntel
                 );
-            }
 
-            // =================================================
-            // FINAL SCORE BOUNDARY
-            // =================================================
 
-            finalScore =
-                Math.min(
-                    Math.max(
-                        Math.round(finalScore),
-                        0
-                    ),
-                    100
+            const finalLevel =
+                getFinalLevel(
+                    finalScore
                 );
 
 
             // =================================================
-            // FINAL LEVEL
-            // =================================================
-
-            let finalLevel;
-
-            if (finalScore >= 86) {
-
-                finalLevel = "CRITICAL";
-
-            } else if (finalScore >= 61) {
-
-                finalLevel = "HIGH";
-
-            } else if (finalScore >= 31) {
-
-                finalLevel = "MEDIUM";
-
-            } else {
-
-                finalLevel = "LOW";
-
-            }
-
-
-            // =================================================
-            // REASONS
+            // 6. REASONS
             // =================================================
 
             const reasons = [
-                ...ruleResult.reasons
+                ...(ruleResult.reasons || [])
             ];
 
 
-            // THREAT INTEL REASON
-
             if (
-                threatIntel.knownThreat === true
+                threatIntel.knownThreat
             ) {
 
                 reasons.push(
 
                     `Known malicious URL detected by: ${
-                        threatIntel.sources.length > 0
+                        threatIntel.sources.length
                             ? threatIntel.sources.join(", ")
                             : "connected threat intelligence"
                     }`
@@ -919,8 +1373,6 @@ app.post(
 
             }
 
-
-            // AI INDICATORS
 
             if (
                 Array.isArray(
@@ -934,13 +1386,11 @@ app.post(
                 ) {
 
                     if (
-
                         typeof indicator === "string" &&
-
                         indicator.trim() &&
-
-                        !reasons.includes(indicator)
-
+                        !reasons.includes(
+                            `AI assessment: ${indicator}`
+                        )
                     ) {
 
                         reasons.push(
@@ -955,7 +1405,39 @@ app.post(
 
 
             // =================================================
-            // RESPONSE
+            // 7. SCORE BREAKDOWN
+            // =================================================
+
+            const scoreBreakdown = {
+
+                ruleScore:
+                    ruleResult.riskScore,
+
+                aiScore:
+                    Number(
+                        aiResult?.riskScore || 0
+                    ),
+
+                aiConfidence:
+                    Number(
+                        aiResult?.confidence || 0
+                    ),
+
+                threatIntelConfirmed:
+                    Boolean(
+                        threatIntel.knownThreat
+                    ),
+
+                scoringMethod:
+                    threatIntel.knownThreat
+                        ? "Threat intelligence override"
+                        : "Weighted rule engine + AI analysis"
+
+            };
+
+
+            // =================================================
+            // 8. RESPONSE
             // =================================================
 
             return res.json({
@@ -971,10 +1453,17 @@ app.post(
 
                 reasons,
 
+                signals:
+                    ruleResult.signals || [],
+
+                scoreBreakdown,
+
                 threatIntel: {
 
                     knownThreat:
-                        threatIntel.knownThreat === true,
+                        Boolean(
+                            threatIntel.knownThreat
+                        ),
 
                     sources:
                         Array.isArray(
@@ -990,6 +1479,9 @@ app.post(
                 },
 
                 aiAnalysis: {
+
+                    available:
+                        Boolean(aiResult),
 
                     classification:
                         aiResult?.classification ||
@@ -1027,7 +1519,14 @@ app.post(
 
                     recommendation:
                         aiResult?.recommendation ||
-                        "Review the domain and available security indicators before interacting with the URL."
+                        "Review the domain and available security indicators before interacting with the URL.",
+
+                    indicators:
+                        Array.isArray(
+                            aiResult?.indicators
+                        )
+                            ? aiResult.indicators
+                            : []
 
                 },
 
@@ -1042,6 +1541,7 @@ app.post(
                 "Scan error:",
                 error
             );
+
 
             return res.status(500).json({
 
@@ -1091,7 +1591,9 @@ app.post(
             );
 
 
-        if (!validation.valid) {
+        if (
+            !validation.valid
+        ) {
 
             return res.status(400).json({
 
@@ -1144,6 +1646,7 @@ app.post(
                 error.message
             );
 
+
             return res.status(500).json({
 
                 error:
@@ -1192,7 +1695,9 @@ app.post(
             );
 
 
-        if (!validation.valid) {
+        if (
+            !validation.valid
+        ) {
 
             return res.status(400).json({
 
@@ -1207,21 +1712,9 @@ app.post(
         try {
 
             const preview =
-                await Promise.race([
-                    getInteractivePreview(
-                        validation.url
-                    ),
-                    new Promise((_, reject) =>
-                        setTimeout(
-                            () => reject(
-                                new Error(
-                                    "Preview timed out after 10 seconds. The destination may use bot protection or may be too slow to render."
-                                )
-                            ),
-                            10000
-                        )
-                    )
-                ]);
+                await getInteractivePreview(
+                    validation.url
+                );
 
 
             if (
@@ -1257,6 +1750,7 @@ app.post(
                 error.message
             );
 
+
             return res.status(500).json({
 
                 error:
@@ -1286,7 +1780,15 @@ app.get(
                 "LinkShield API",
 
             status:
-                "running"
+                "running",
+
+            aiConfigured:
+                Boolean(
+                    process.env.OPENAI_API_KEY
+                ),
+
+            threatIntel:
+                "URLhaus"
 
         });
 
@@ -1344,7 +1846,9 @@ app.get(
                 );
 
 
-            if (!validation.valid) {
+            if (
+                !validation.valid
+            ) {
 
                 return res.status(400).send(
                     validation.message
@@ -1408,10 +1912,12 @@ app.get(
                 contentType
             );
 
+
             res.setHeader(
                 "Cache-Control",
                 "no-store"
             );
+
 
             res.setHeader(
                 "X-Content-Type-Options",
@@ -1429,6 +1935,7 @@ app.get(
                 "Preview asset error:",
                 error.message
             );
+
 
             return res.status(502).send(
                 "Unable to load preview asset"
@@ -1454,6 +1961,14 @@ app.listen(
 
         console.log(
             `LinkShield server running on port ${PORT}`
+        );
+
+        console.log(
+            `AI configured: ${
+                Boolean(
+                    process.env.OPENAI_API_KEY
+                )
+            }`
         );
 
     }
