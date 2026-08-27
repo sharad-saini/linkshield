@@ -76,271 +76,120 @@ function normalizeURL(inputURL) {
 // =========================================================
 
 function analyzeURL(inputURL) {
+    const normalizedURL = normalizeURL(inputURL);
 
-    let score = 0;
-
-    const reasons = [];
-
-    const normalizedURL =
-        normalizeURL(inputURL);
+    if (!normalizedURL) {
+        return {
+            riskScore: 100,
+            level: "HIGH",
+            reasons: ["Invalid or empty URL"]
+        };
+    }
 
     let url;
 
     try {
-
         url = new URL(normalizedURL);
-
     } catch {
-
         return {
             riskScore: 100,
             level: "HIGH",
-            reasons: [
-                "Invalid URL format"
-            ]
+            reasons: ["Invalid URL format"]
         };
-
     }
 
+    const hostname = url.hostname.toLowerCase();
+    const pathname = url.pathname.toLowerCase();
+    const fullURL = normalizedURL.toLowerCase();
+    const reasons = [];
+    let score = 0;
 
-    const hostname =
-        url.hostname.toLowerCase();
+    const add = (points, reason) => {
+        score += points;
+        reasons.push(reason);
+    };
 
-    const pathname =
-        url.pathname.toLowerCase();
-
-    const fullURL =
-        normalizedURL.toLowerCase();
-
-
-    // =====================================================
-    // 1. HTTPS
-    // =====================================================
-
+    // ---------------------------------------------------------
+    // 1. Transport
+    // HTTPS itself is NOT suspicious. HTTP gets only a small hit.
+    // ---------------------------------------------------------
     if (url.protocol !== "https:") {
-
-        score += 10;
-
-        reasons.push(
-            "Connection does not use HTTPS"
-        );
-
+        add(10, "Connection does not use HTTPS");
     }
 
-
-    // =====================================================
-    // 2. RAW IP ADDRESS
-    // =====================================================
-
-    const ipPattern =
-        /^(?:\d{1,3}\.){3}\d{1,3}$/;
+    // ---------------------------------------------------------
+    // 2. Raw IP destination
+    // ---------------------------------------------------------
+    const ipPattern = /^(?:\d{1,3}\.){3}\d{1,3}$/;
 
     if (ipPattern.test(hostname)) {
-
-        score += 25;
-
-        reasons.push(
-            "URL uses an IP address instead of a domain"
-        );
-
+        add(25, "URL uses an IP address instead of a domain");
     }
 
-
-    // =====================================================
-    // 3. @ SYMBOL
-    // =====================================================
-
-    if (inputURL.includes("@")) {
-
-        score += 30;
-
-        reasons.push(
-            "URL contains @ symbol, which can be used to obscure the actual destination"
+    // ---------------------------------------------------------
+    // 3. User-info / @ deception
+    // ---------------------------------------------------------
+    if (url.username || url.password || fullURL.includes("@")) {
+        add(
+            30,
+            "URL contains user-info/@ syntax that can obscure the actual destination"
         );
-
     }
 
-
-    // =====================================================
-    // 4. LONG URL
-    // =====================================================
-
-    if (normalizedURL.length > 150) {
-
-        score += 8;
-
-        reasons.push(
-            "URL is unusually long"
-        );
-
+    // ---------------------------------------------------------
+    // 4. Punycode
+    // ---------------------------------------------------------
+    if (hostname.includes("xn--")) {
+        add(15, "Hostname contains a punycode label");
     }
 
-
-    // =====================================================
-    // 5. EXCESSIVE SUBDOMAINS
-    // =====================================================
-
-    const hostnameParts =
-        hostname
-            .split(".")
-            .filter(Boolean);
-
-    const subdomainCount =
-        Math.max(
-            0,
-            hostnameParts.length - 2
-        );
+    // ---------------------------------------------------------
+    // 5. Excessive subdomains
+    // ---------------------------------------------------------
+    const hostnameParts = hostname.split(".").filter(Boolean);
+    const subdomainCount = Math.max(0, hostnameParts.length - 2);
 
     if (subdomainCount >= 4) {
-
-        score += 10;
-
-        reasons.push(
-            "URL contains an unusually deep subdomain structure"
-        );
-
+        add(8, "URL contains an unusually deep subdomain structure");
     }
 
-
-    // =====================================================
-    // 6. PUNYCODE
-    // =====================================================
-
-    if (hostname.includes("xn--")) {
-
-        score += 15;
-
-        reasons.push(
-            "Hostname contains an internationalized/punycode label"
-        );
-
-    }
-
-
-    // =====================================================
-    // 7. URL SHORTENERS
-    // =====================================================
-
-    const shorteners = [
+    // ---------------------------------------------------------
+    // 6. URL shortening services
+    // ---------------------------------------------------------
+    const shorteners = new Set([
         "bit.ly",
         "tinyurl.com",
         "t.co",
         "is.gd",
         "cutt.ly",
         "ow.ly",
-        "shorturl.at"
-    ];
+        "shorturl.at",
+        "rebrand.ly",
+        "rb.gy"
+    ]);
 
-    if (
-        shorteners.includes(hostname)
-    ) {
-
-        score += 18;
-
-        reasons.push(
-            "Uses a URL shortening service"
-        );
-
+    if (shorteners.has(hostname)) {
+        add(18, "Uses a URL shortening service that hides the final destination");
     }
 
-
-    // =====================================================
-    // 8. SECURITY KEYWORDS
-    // =====================================================
-
-    const suspiciousWords = [
-
-        "login",
-        "signin",
-        "sign-in",
-        "verify",
-        "verification",
-        "password",
-        "credential",
-        "account",
-        "secure",
-        "security",
-        "update",
-        "confirm",
-        "confirmation",
-        "reset",
-        "recover",
-        "wallet",
-        "payment",
-        "billing",
-        "claim",
-        "bonus",
-        "reward",
-        "free"
-
-    ];
-
-    const foundWords =
-        suspiciousWords.filter(
-            word =>
-                fullURL.includes(word)
-        );
-
-    if (
-        foundWords.length > 0
-    ) {
-
-        score += Math.min(
-            foundWords.length * 2,
-            8
-        );
-
-        reasons.push(
-            `Contains security-sensitive keyword(s): ${foundWords.join(", ")}`
-        );
-
+    // ---------------------------------------------------------
+    // 7. URL complexity
+    // A long URL is not malicious by itself, so the weight is low.
+    // ---------------------------------------------------------
+    if (normalizedURL.length > 220) {
+        add(5, "URL is unusually long");
     }
 
-
-    // =====================================================
-    // 9. AUTHENTICATION COMBINATION
-    // =====================================================
-
-    const authenticationTerms = [
-
-        "login",
-        "signin",
-        "sign-in",
-        "verify",
-        "verification",
-        "account",
-        "confirm",
-        "confirmation",
-        "reset",
-        "recover"
-
-    ];
-
-    const authenticationMatches =
-        authenticationTerms.filter(
-            term =>
-                fullURL.includes(term)
-        );
-
-    if (
-        authenticationMatches.length >= 2
-    ) {
-
-        score += 10;
-
-        reasons.push(
-            "Multiple authentication or account-verification indicators are present"
-        );
-
+    if ((normalizedURL.match(/%[0-9a-f]{2}/gi) || []).length >= 8) {
+        add(5, "URL contains unusually heavy percent-encoding");
     }
 
-
-    // =====================================================
-    // 10. CREDENTIAL INDICATORS
-    // =====================================================
-
+    // ---------------------------------------------------------
+    // 8. Credential indicators
+    // These matter more when they appear in a path/query rather than
+    // ordinary words such as 'account' or 'security'.
+    // ---------------------------------------------------------
     const credentialTerms = [
-
         "password",
         "passwd",
         "credential",
@@ -349,34 +198,22 @@ function analyzeURL(inputURL) {
         "otp",
         "pin",
         "token"
-
     ];
 
-    const credentialMatches =
-        credentialTerms.filter(
-            term =>
-                fullURL.includes(term)
-        );
+    const credentialMatches = credentialTerms.filter((term) =>
+        fullURL.includes(term)
+    );
 
-    if (
-        credentialMatches.length > 0
-    ) {
+    const hasCredentialSignal = credentialMatches.length > 0;
 
-        score += 10;
-
-        reasons.push(
-            "URL contains credential-related indicators"
-        );
-
+    if (hasCredentialSignal) {
+        add(10, "URL contains credential-related indicators");
     }
 
-
-    // =====================================================
-    // 11. SENSITIVE PARAMETERS
-    // =====================================================
-
-    const sensitiveParameters = [
-
+    // ---------------------------------------------------------
+    // 9. Sensitive query parameters
+    // ---------------------------------------------------------
+    const sensitiveParameters = new Set([
         "password",
         "passwd",
         "credential",
@@ -387,139 +224,72 @@ function analyzeURL(inputURL) {
         "secret",
         "apikey",
         "api_key"
+    ]);
 
-    ];
+    let sensitiveParameterFound = false;
 
-    let sensitiveParameterFound =
-        false;
-
-    for (
-        const parameter
-        of sensitiveParameters
-    ) {
-
-        if (
-            url.searchParams.has(parameter)
-        ) {
-
-            sensitiveParameterFound =
-                true;
-
+    for (const [key] of url.searchParams.entries()) {
+        if (sensitiveParameters.has(key.toLowerCase())) {
+            sensitiveParameterFound = true;
             break;
-
         }
-
     }
 
-    if (
-        sensitiveParameterFound
-    ) {
-
-        score += 15;
-
-        reasons.push(
+    if (sensitiveParameterFound) {
+        add(
+            15,
             "URL contains a sensitive credential-related parameter"
         );
-
     }
 
-
-    // =====================================================
-    // 12. DECEPTIVE HOSTNAME
-    // =====================================================
-
-    const hostnameSecurityTerms = [
-
+    // ---------------------------------------------------------
+    // 10. Authentication paths
+    // IMPORTANT: login/account/verify alone are NOT malicious.
+    // They only contribute when paired with stronger evidence.
+    // ---------------------------------------------------------
+    const authenticationTerms = [
         "login",
         "signin",
+        "sign-in",
         "verify",
         "verification",
-        "security",
-        "secure",
         "account",
-        "support",
-        "update",
-        "confirm"
-
+        "confirm",
+        "confirmation",
+        "reset",
+        "recover"
     ];
 
-    const hostnameSecurityMatches =
-        hostnameSecurityTerms.filter(
-            term =>
-                hostname.includes(term)
+    const authenticationMatches = authenticationTerms.filter((term) =>
+        fullURL.includes(term)
+    );
+
+    const hasAuthenticationSignal = authenticationMatches.length > 0;
+    const multipleAuthenticationSignals = authenticationMatches.length >= 2;
+
+    if (multipleAuthenticationSignals) {
+        add(
+            5,
+            "Multiple authentication or account-verification indicators are present"
         );
-
-    if (
-        hostnameSecurityMatches.length >= 2
-    ) {
-
-        score += 12;
-
-        reasons.push(
-            "Hostname contains multiple security or account-related terms"
-        );
-
     }
-
-
-    // =====================================================
-    // 13. CREDENTIAL PATH
-    // =====================================================
 
     const credentialPath =
-        /\/(login|signin|verify|verification|account|security|password|reset|recover)[^/]*(\/|$)/i;
+        /\/(login|signin|sign-in|verify|verification|account|security|password|reset|recover)(?:[/?#]|$)/i;
 
-    if (
-        credentialPath.test(pathname) &&
-        credentialMatches.length > 0
-    ) {
+    const credentialPathFound = credentialPath.test(pathname);
 
-        score += 10;
-
-        reasons.push(
+    if (credentialPathFound && hasCredentialSignal) {
+        add(
+            10,
             "Authentication-related path is combined with credential indicators"
         );
-
     }
 
-
-    // =====================================================
-    // 14. HIGH-RISK CREDENTIAL COMBINATION
-    // =====================================================
-
-    const hasAuthenticationSignal =
-        authenticationMatches.length >= 2;
-
-    const hasCredentialSignal =
-        credentialMatches.length > 0;
-
-    const hasDeceptiveHostname =
-        hostnameSecurityMatches.length >= 2;
-
-    if (
-        hasAuthenticationSignal &&
-        hasCredentialSignal &&
-        (
-            sensitiveParameterFound ||
-            hasDeceptiveHostname
-        )
-    ) {
-
-        score += 15;
-
-        reasons.push(
-            "Multiple correlated credential and verification signals form a high-risk pattern"
-        );
-
-    }
-
-
-    // =====================================================
-    // 15. DANGEROUS DOWNLOADS
-    // =====================================================
-
+    // ---------------------------------------------------------
+    // 11. Dangerous downloads
+    // ---------------------------------------------------------
     const dangerousExtensions = [
-
         ".exe",
         ".scr",
         ".msi",
@@ -528,35 +298,22 @@ function analyzeURL(inputURL) {
         ".ps1",
         ".apk",
         ".jar",
-        ".dmg"
-
+        ".dmg",
+        ".pkg"
     ];
 
-    const hasDangerousDownload =
-        dangerousExtensions.some(
-            extension =>
-                pathname.endsWith(extension)
-        );
-
-    if (
-        hasDangerousDownload
-    ) {
-
-        score += 18;
-
-        reasons.push(
+    if (dangerousExtensions.some((extension) => pathname.endsWith(extension))) {
+        add(
+            25,
             "URL points to a potentially executable or installable file"
         );
-
     }
 
-
-    // =====================================================
-    // 16. URGENCY + AUTHENTICATION
-    // =====================================================
-
+    // ---------------------------------------------------------
+    // 12. Urgency / reward language
+    // These are weak alone. They become meaningful with auth signals.
+    // ---------------------------------------------------------
     const urgencyTerms = [
-
         "urgent",
         "immediately",
         "expire",
@@ -566,69 +323,58 @@ function analyzeURL(inputURL) {
         "reward",
         "bonus",
         "free"
-
     ];
 
-    const urgencyFound =
-        urgencyTerms.some(
-            term =>
-                fullURL.includes(term)
-        );
+    const urgencyFound = urgencyTerms.some((term) =>
+        fullURL.includes(term)
+    );
 
-    if (
-        urgencyFound &&
-        hasAuthenticationSignal
-    ) {
-
-        score += 10;
-
-        reasons.push(
+    if (urgencyFound && hasAuthenticationSignal) {
+        add(
+            10,
             "Urgency or reward language is combined with authentication-related signals"
         );
-
     }
 
+    // ---------------------------------------------------------
+    // 13. Strong correlated phishing pattern
+    // ---------------------------------------------------------
+    const strongCredentialPattern =
+        multipleAuthenticationSignals &&
+        hasCredentialSignal &&
+        (sensitiveParameterFound || credentialPathFound);
 
-    // =====================================================
-    // FINAL SCORE
-    // =====================================================
-
-    score =
-        Math.min(
-            Math.max(score, 0),
-            100
+    if (strongCredentialPattern) {
+        add(
+            15,
+            "Multiple correlated authentication and credential signals form a stronger phishing pattern"
         );
-
-
-    let level;
-
-    if (score <= 30) {
-
-        level = "LOW";
-
-    } else if (score <= 60) {
-
-        level = "MEDIUM";
-
-    } else {
-
-        level = "HIGH";
-
     }
 
+    // ---------------------------------------------------------
+    // 14. Final deterministic score
+    // ---------------------------------------------------------
+    score = Math.min(Math.max(Math.round(score), 0), 100);
+
+    let level = "LOW";
+
+    if (score > 60) {
+        level = "HIGH";
+    } else if (score > 30) {
+        level = "MEDIUM";
+    }
 
     return {
-
         riskScore: score,
-
         level,
-
-        reasons
-
+        reasons,
+        evidenceCount: reasons.length,
+        hasStrongEvidence:
+            score >= 25 ||
+            strongCredentialPattern ||
+            dangerousExtensions.some((extension) => pathname.endsWith(extension))
     };
-
 }
-
 
 // =========================================================
 // SAFE PREVIEW VALIDATION
@@ -855,9 +601,6 @@ app.post(
                     await checkThreatIntel(
                         normalizedURL
                     );
-
-
-
                 if (
                     threatResult &&
                     typeof threatResult === "object"
@@ -945,6 +688,17 @@ app.post(
                 aiResult
             );
 
+            console.log("FINAL DEBUG:", {
+                url: normalizedURL,
+                ruleScore: ruleResult.riskScore,
+                ruleLevel: ruleResult.level,
+                threatKnown: threatIntel.knownThreat,
+                threatSources: threatIntel.sources,
+                aiScore: aiResult?.riskScore,
+                aiClassification: aiResult?.classification,
+                aiConfidence: aiResult?.confidence
+            });
+
 
             // =================================================
             // 5. FINAL SCORE
@@ -974,59 +728,31 @@ app.post(
             // =================================================
             // AI SECOND OPINION
             // =================================================
+            // AI may strengthen evidence that already exists.
+            // AI must NEVER turn a clean URL into HIGH by itself.
 
-            const aiConfidence =
-                Number(
-                    aiResult?.confidence || 0
-                );
-
-            const aiScore =
-                Number(
-                    aiResult?.riskScore || 0
-                );
-
-            const aiClassification =
-                String(
-                    aiResult?.classification || ""
-                ).toUpperCase();
-
+            const aiConfidence = Number(aiResult?.confidence || 0);
+            const aiScore = Number(aiResult?.riskScore || 0);
+            const aiClassification = String(
+                aiResult?.classification || ""
+            ).toUpperCase();
 
             const hasObjectiveEvidence =
-                ruleResult.reasons.length >= 2;
-
-
-            // AI is allowed to strengthen a suspicious
-            // URL, but it cannot independently make a
-            // clean URL HIGH.
+                ruleResult.hasStrongEvidence === true ||
+                ruleResult.evidenceCount >= 2;
 
             if (
-
-                aiConfidence >= 85 &&
-
                 hasObjectiveEvidence &&
-
-                (
-                    aiClassification === "HIGH" ||
-                    aiClassification === "CRITICAL"
-                ) &&
-
+                aiConfidence >= 85 &&
+                (aiClassification === "HIGH" || aiClassification === "CRITICAL") &&
                 Number.isFinite(aiScore) &&
-
                 aiScore > finalScore
-
             ) {
-
-                finalScore =
-                    Math.max(
-                        finalScore,
-                        Math.min(
-                            aiScore,
-                            finalScore + 25
-                        )
-                    );
-
+                finalScore = Math.max(
+                    finalScore,
+                    Math.min(aiScore, finalScore + 20)
+                );
             }
-
 
             // =================================================
             // FINAL SCORE BOUNDARY

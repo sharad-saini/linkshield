@@ -7,42 +7,37 @@ async function checkThreatIntel(url) {
         threatType: null
     };
 
-    // ==========================================
-    // URLhaus
-    // ==========================================
+    if (!url || typeof url !== "string") {
+        return result;
+    }
 
     try {
         const response = await axios.post(
             "https://urlhaus-api.abuse.ch/v1/url/",
-            new URLSearchParams({
-                url: url
-            }).toString(),
+            new URLSearchParams({ url: url.trim() }).toString(),
             {
                 headers: {
-                    "Content-Type":
-                        "application/x-www-form-urlencoded"
+                    "Content-Type": "application/x-www-form-urlencoded"
                 },
-                timeout: 10000
+                timeout: 10000,
+                validateStatus: (status) => status >= 200 && status < 500
             }
         );
 
-        if (
-            response.data &&
-            response.data.query_status === "ok"
-        ) {
+        const data = response.data || {};
+
+        // URLhaus returns query_status=ok when the submitted URL
+        // has a matching record. "no_results" is NOT a threat.
+        if (data.query_status === "ok") {
             result.knownThreat = true;
-
-            result.sources.push(
-                "URLhaus"
-            );
-
+            result.sources.push("URLhaus");
             result.threatType =
-                response.data.threat ||
+                data.threat ||
+                data.tags?.join?.(", ") ||
                 "Malicious URL";
         }
-
     } catch (error) {
-        console.log(
+        console.error(
             "URLhaus check unavailable:",
             error.message
         );
