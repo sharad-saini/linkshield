@@ -51,22 +51,40 @@ app.use(
 // =========================================================
 
 
+function normalizeURL(inputURL) {
+
+    if (!inputURL || typeof inputURL !== "string") {
+        return "";
+    }
+
+    let value = inputURL.trim();
+
+    if (!value) {
+        return "";
+    }
+
+    if (!/^https?:\/\//i.test(value)) {
+        value = `https://${value}`;
+    }
+
+    return value;
+}
+
+
 function analyzeURL(inputURL) {
 
     let score = 0;
 
     const reasons = [];
 
+    const normalizedURL = normalizeURL(inputURL);
+
     let url;
 
 
-    // =====================================================
-    // BASIC URL PARSING
-    // =====================================================
-
     try {
 
-        url = new URL(inputURL);
+        url = new URL(normalizedURL);
 
     } catch {
 
@@ -80,17 +98,14 @@ function analyzeURL(inputURL) {
 
     }
 
-
     const hostname =
         url.hostname.toLowerCase();
 
     const pathname =
         url.pathname.toLowerCase();
-
-    const fullURL =
-        inputURL.toLowerCase();
-
-
+        
+        const fullURL =
+        normalizedURL.toLowerCase();
     // =====================================================
     // 1. CONNECTION SECURITY
     // =====================================================
@@ -894,34 +909,30 @@ app.post(
             // 1. LOCAL TECHNICAL ANALYSIS
             // ------------------------------------------------
 
+            const normalizedURL = normalizeURL(url);
+
+            if (!normalizedURL) {
+                return res.status(400).json({
+                    error: "URL is required"
+                });
+            }
+            
             const ruleResult =
                 analyzeURL(
-                    url
+                    normalizedURL
                 );
-
-
-            // ------------------------------------------------
-            // 2. LIVE THREAT INTELLIGENCE
-            // ------------------------------------------------
-
+            
             const threatIntel =
                 await checkThreatIntel(
-                    url
+                    normalizedURL
                 );
-
-
-            // ------------------------------------------------
-            // 3. AI SECOND OPINION
-            // ------------------------------------------------
-
+            
             const aiResult =
                 await analyzeWithAI(
-                    url,
+                    normalizedURL,
                     ruleResult,
                     threatIntel
                 );
-
-
             // ------------------------------------------------
             // 4. FINAL SCORE
             // ------------------------------------------------
@@ -1131,76 +1142,82 @@ app.post(
             // RESPONSE
             // ------------------------------------------------
 
-            return res.json({
+// ------------------------------------------------
+// RESPONSE
+// ------------------------------------------------
 
-                url,
+// ------------------------------------------------
+// RESPONSE
+// ------------------------------------------------
 
-                riskScore:
-                    finalScore,
+return res.json({
 
-                level:
-                    finalLevel,
+    url: normalizedURL,
 
-                reasons,
+    riskScore: finalScore,
 
-                threatIntel: {
+    level: finalLevel,
 
-                    knownThreat:
-                        Boolean(
-                            threatIntel.knownThreat
-                        ),
+    reasons,
 
-                    sources:
-                        Array.isArray(
-                            threatIntel.sources
-                        )
-                            ? threatIntel.sources
-                            : [],
+    threatIntel: {
 
-                    threatType:
-                        threatIntel.threatType ||
-                        null
+        knownThreat:
+            Boolean(
+                threatIntel.knownThreat
+            ),
 
-                },
+        sources:
+            Array.isArray(
+                threatIntel.sources
+            )
+                ? threatIntel.sources
+                : [],
 
-                aiAnalysis: {
+        threatType:
+            threatIntel.threatType ||
+            null
 
-                    classification:
-                        aiResult?.classification ||
-                        ruleResult.level,
+    },
 
-                    riskScore:
-                        Number.isFinite(
-                            aiResult?.riskScore
-                        )
-                            ? aiResult.riskScore
-                            : ruleResult.riskScore,
+    aiAnalysis: {
 
-                    confidence:
-                        Number.isFinite(
-                            aiResult?.confidence
-                        )
-                            ? aiResult.confidence
-                            : null,
+        classification:
+            aiResult?.classification ||
+            ruleResult.level,
 
-                    isLegitimate:
-                        aiResult?.isLegitimate ??
-                        null,
+        riskScore:
+            Number.isFinite(
+                aiResult?.riskScore
+            )
+                ? aiResult.riskScore
+                : ruleResult.riskScore,
 
-                    explanation:
-                        aiResult?.explanation ||
-                        "AI analysis was unavailable. LinkShield used its local security analysis.",
+        confidence:
+            Number.isFinite(
+                aiResult?.confidence
+            )
+                ? aiResult.confidence
+                : null,
 
-                    recommendation:
-                        aiResult?.recommendation ||
-                        "Review the domain and available security indicators before interacting with the URL."
+        isLegitimate:
+            aiResult?.isLegitimate ??
+            null,
 
-                },
+        explanation:
+            aiResult?.explanation ||
+            "AI analysis was unavailable. LinkShield used its local security analysis.",
 
-                message:
-                    "URL analysis completed"
+        recommendation:
+            aiResult?.recommendation ||
+            "Review the domain and available security indicators before interacting with the URL."
 
-            });
+    },
+
+    message:
+        "URL analysis completed"
+
+});
 
         } catch (error) {
 
@@ -1247,12 +1264,12 @@ app.post(
 
         }
 
+        const normalizedURL = normalizeURL(url);
 
         const validation =
             validatePreviewURL(
-                url
+                normalizedURL
             );
-
 
         if (!validation.valid) {
 
