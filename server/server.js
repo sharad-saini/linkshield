@@ -1152,58 +1152,33 @@ app.post(
 // ------------------------------------------------
 
 return res.json({
-
     url: normalizedURL,
-
     riskScore: finalScore,
-
     level: finalLevel,
-
     reasons,
-
     threatIntel: {
-
-        knownThreat:
-            Boolean(
-                threatIntel.knownThreat
-            ),
-
-        sources:
-            Array.isArray(
-                threatIntel.sources
-            )
-                ? threatIntel.sources
-                : [],
-
-        threatType:
-            threatIntel.threatType ||
-            null
-
+        knownThreat: Boolean(threatIntel.knownThreat),
+        sources: Array.isArray(threatIntel.sources)
+            ? threatIntel.sources
+            : [],
+        threatType: threatIntel.threatType || null
     },
-
     aiAnalysis: {
-
         classification:
-            aiResult?.classification ||
-            ruleResult.level,
+            aiResult?.classification || ruleResult.level,
 
         riskScore:
-            Number.isFinite(
-                aiResult?.riskScore
-            )
+            Number.isFinite(aiResult?.riskScore)
                 ? aiResult.riskScore
                 : ruleResult.riskScore,
 
         confidence:
-            Number.isFinite(
-                aiResult?.confidence
-            )
+            Number.isFinite(aiResult?.confidence)
                 ? aiResult.confidence
                 : null,
 
         isLegitimate:
-            aiResult?.isLegitimate ??
-            null,
+            aiResult?.isLegitimate ?? null,
 
         explanation:
             aiResult?.explanation ||
@@ -1212,12 +1187,9 @@ return res.json({
         recommendation:
             aiResult?.recommendation ||
             "Review the domain and available security indicators before interacting with the URL."
-
     },
 
-    message:
-        "URL analysis completed"
-
+    message: "URL analysis completed"
 });
 
         } catch (error) {
