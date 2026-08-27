@@ -1,10 +1,39 @@
 const { chromium } = require("playwright");
+
 const { validatePreviewURL } = require("./previewSecurity");
 
-async function getInteractivePreview(targetUrl) {
+function normalizeUrl(input) {
+    let value = String(input || "").trim();
+
+    if (!value) {
+        throw new Error("URL is required");
+    }
+
+    // Allow users to enter:
+    // youtube.com
+    // www.youtube.com
+    // youtube.com/watch?v=test
+    // https://youtube.com
+    // http://example.com
+    if (!/^https?:\/\//i.test(value)) {
+        value = `https://${value}`;
+    }
+
+    return value;
+}
+
+async function getInteractivePreview(inputUrl) {
+
     let browser;
 
     try {
+
+        // ==========================================
+        // NORMALIZE USER INPUT
+        // ==========================================
+
+        const targetUrl = normalizeUrl(inputUrl);
+
         // ==========================================
         // SECURITY VALIDATION
         // ==========================================
@@ -13,10 +42,12 @@ async function getInteractivePreview(targetUrl) {
             await validatePreviewURL(targetUrl);
 
         if (!validation.allowed) {
+
             return {
                 success: false,
                 message: validation.reason
             };
+
         }
 
         const safeURL =
@@ -27,6 +58,7 @@ async function getInteractivePreview(targetUrl) {
         // ==========================================
 
         browser = await chromium.launch({
+
             headless: true,
 
             args: [
@@ -35,10 +67,12 @@ async function getInteractivePreview(targetUrl) {
                 "--disable-dev-shm-usage",
                 "--disable-gpu"
             ]
+
         });
 
         const context =
             await browser.newContext({
+
                 javaScriptEnabled: true,
 
                 ignoreHTTPSErrors: false,
@@ -50,6 +84,7 @@ async function getInteractivePreview(targetUrl) {
 
                 userAgent:
                     "LinkShield-SecureBrowser/1.0"
+
             });
 
         const page =
@@ -60,7 +95,9 @@ async function getInteractivePreview(targetUrl) {
         // ==========================================
 
         await page.route("**/*", async (route) => {
+
             try {
+
                 const request =
                     route.request();
 
@@ -73,7 +110,9 @@ async function getInteractivePreview(targetUrl) {
                         requestURL.protocol
                     )
                 ) {
+
                     return route.abort();
+
                 }
 
                 // Validate every destination
@@ -83,6 +122,7 @@ async function getInteractivePreview(targetUrl) {
                     );
 
                 if (!check.allowed) {
+
                     console.log(
                         "🛡️ Blocked preview request:",
                         requestURL.hostname,
@@ -90,18 +130,22 @@ async function getInteractivePreview(targetUrl) {
                     );
 
                     return route.abort();
+
                 }
 
                 await route.continue();
 
             } catch (error) {
+
                 console.log(
                     "🛡️ Blocked unsafe request:",
                     error.message
                 );
 
                 return route.abort();
+
             }
+
         });
 
         // ==========================================
@@ -109,8 +153,11 @@ async function getInteractivePreview(targetUrl) {
         // ==========================================
 
         await page.goto(safeURL, {
+
             waitUntil: "domcontentloaded",
+
             timeout: 20000
+
         });
 
         // Give modern JS applications time to render
@@ -119,9 +166,14 @@ async function getInteractivePreview(targetUrl) {
         // Some sites keep connections open permanently.
         // Network idle is therefore optional.
         try {
-            await page.waitForLoadState("networkidle", {
-                timeout: 8000
-            });
+
+            await page.waitForLoadState(
+                "networkidle",
+                {
+                    timeout: 8000
+                }
+            );
+
         } catch {}
 
         // ==========================================
@@ -129,27 +181,36 @@ async function getInteractivePreview(targetUrl) {
         // ==========================================
 
         await page.evaluate(() => {
+
             document
                 .querySelectorAll("img")
                 .forEach((img) => {
+
                     try {
+
                         img.loading = "eager";
 
                         const src =
                             img.getAttribute("src");
 
                         if (src) {
-                            img.src = new URL(
-                                src,
-                                document.baseURI
-                            ).href;
+
+                            img.src =
+                                new URL(
+                                    src,
+                                    document.baseURI
+                                ).href;
+
                         }
 
                         img.removeAttribute(
                             "srcset"
                         );
+
                     } catch {}
+
                 });
+
         });
 
         // Let images finish
@@ -213,6 +274,7 @@ async function getInteractivePreview(targetUrl) {
             `;
 
             document.body.prepend(banner);
+
         });
 
         // ==========================================
@@ -221,9 +283,13 @@ async function getInteractivePreview(targetUrl) {
 
         const screenshot =
             await page.screenshot({
+
                 type: "png",
+
                 fullPage: true,
+
                 animations: "disabled"
+
             });
 
         const imageBase64 =
@@ -257,8 +323,11 @@ async function getInteractivePreview(targetUrl) {
 
         const safeHTML = `
 <!DOCTYPE html>
+
 <html>
+
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -271,6 +340,7 @@ async function getInteractivePreview(targetUrl) {
     </title>
 
     <style>
+
         * {
             box-sizing: border-box;
         }
@@ -291,7 +361,9 @@ async function getInteractivePreview(targetUrl) {
             width: 100%;
             height: auto;
         }
+
     </style>
+
 </head>
 
 <body>
@@ -304,6 +376,7 @@ async function getInteractivePreview(targetUrl) {
     >
 
 </body>
+
 </html>
         `;
 
@@ -320,15 +393,20 @@ async function getInteractivePreview(targetUrl) {
         // ==========================================
 
         return {
+
             success: true,
 
             title:
                 title ||
                 "LinkShield Interactive Preview",
 
+            url: safeURL,
+
             html: safeHTML,
 
-            previewType: "static-rendered"
+            previewType:
+                "static-rendered"
+
         };
 
     } catch (error) {
@@ -348,21 +426,29 @@ async function getInteractivePreview(targetUrl) {
         );
 
         if (browser) {
+
             try {
                 await browser.close();
             } catch {}
+
         }
 
         return {
+
             success: false,
 
             message:
                 error.message ||
                 "Unable to render protected preview."
+
         };
+
     }
+
 }
 
 module.exports = {
+
     getInteractivePreview
+
 };

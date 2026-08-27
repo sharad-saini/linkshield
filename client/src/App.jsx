@@ -28,17 +28,31 @@ const API_BASE =
    HELPERS
 ========================================================= */
 
+function normalizeUrl(input) {
+  let value = String(input || "").trim();
+
+  if (!value) {
+    throw new Error("Please enter a website or link.");
+  }
+
+  if (!/^https?:\/\//i.test(value)) {
+    value = `https://${value}`;
+  }
+
+  return value;
+}
+
 const getWebsiteName = (url) => {
   if (!url) return "";
 
   try {
-    const normalized = /^https?:\/\//i.test(url)
+    const normalizedUrl = normalizeUrl(url)
       ? url
       : `https://${url}`;
-
-    const hostname = new URL(normalized).hostname
+  
+    const hostname = new URL(normalizedUrl).hostname
       .replace(/^www\./i, "");
-
+  
     return hostname;
   } catch {
     return "";
