@@ -855,16 +855,7 @@ app.post(
                     await checkThreatIntel(
                         normalizedURL
                     );
-                    console.log("FINAL DEBUG:", {
-                        url: normalizedURL,
-                        ruleScore: ruleResult.riskScore,
-                        ruleLevel: ruleResult.level,
-                        threatKnown: threatIntel.knownThreat,
-                        threatSources: threatIntel.sources,
-                        aiScore: aiResult?.riskScore,
-                        aiClassification: aiResult?.classification,
-                        aiConfidence: aiResult?.confidence
-                    });
+
 
 
                 if (
