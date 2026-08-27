@@ -922,10 +922,11 @@ app.post(
                     normalizedURL
                 );
             
-            const threatIntel =
-                await checkThreatIntel(
-                    normalizedURL
-                );
+                const threatIntel =
+                await checkThreatIntel(normalizedURL);
+                console.log("URL:", normalizedURL);
+                console.log("RULE:", ruleResult);
+                console.log("THREAT:", threatIntel);
             
             const aiResult =
                 await analyzeWithAI(
